@@ -15,7 +15,7 @@ function App() {
       return
     }
 
-    setStatus('获取中...')
+    setStatus('获取中...(首次运行会下载chromium, 可能需要较长时间, 请耐心等待)')
 
     GetTimetable(studentID, password, isBusy)
       .then(() => {
@@ -23,7 +23,7 @@ function App() {
         alert('课程表截图已保存')
       })
       .catch((e: Error) => {
-        alert(`Error: ${e.message}`)
+        alert(`Error: ${e.message}; 请尝试以管理员身份运行程序`)
       })
   }
 
