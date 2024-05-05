@@ -3,7 +3,7 @@ import {
   WindowMinimise,
   WindowToggleMaximise,
   Quit,
-} from '../../wailsjs/runtime/runtime'
+} from '../wailsjs/runtime/runtime'
 import { 
   CloseOutlined,
   ExpandOutlined,
@@ -18,6 +18,7 @@ export function Header() {
       style={{
         '--wails-draggable': 'drag',
       } as React.CSSProperties}
+      onDoubleClick={() => WindowToggleMaximise()}
     >
 
       <p

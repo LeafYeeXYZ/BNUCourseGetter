@@ -5,7 +5,7 @@ import {
   CheckOutlined,
 } from '@ant-design/icons'
 
-import { InstallBrowser } from '../wailsjs/go/main/App'
+import { InstallBrowser } from './wailsjs/go/main/App'
 import { useState, useEffect } from 'react'
 
 import { Header } from './components/Header'
@@ -35,6 +35,12 @@ function App() {
       .then(() => setBrowserStatus({ status: '已安装', icon: <CheckOutlined /> }))
       .catch(() => setBrowserStatus({ status: '安装失败', icon: <CloseOutlined /> }))
   }, [])
+
+  // 用于标识系统状态的 state 和 event
+  /// TODO
+
+  // 用于标识当前输出的 state 和 event
+  /// TODO
 
   return (
     <main id="container">

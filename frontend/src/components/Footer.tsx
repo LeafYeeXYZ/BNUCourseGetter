@@ -1,6 +1,6 @@
 import '../styles/Footer.css'
 import { BrowserStatus } from '../App'
-import { BrowserOpenURL } from '../../wailsjs/runtime/runtime'
+import { BrowserOpenURL } from '../wailsjs/runtime/runtime'
 import { ExportOutlined } from '@ant-design/icons'
 
 interface FooterProps {
@@ -9,10 +9,7 @@ interface FooterProps {
 
 export function Footer({ browserStatus }: FooterProps) {
 
-
   return (
-
-
     <footer
       id='footer'
     >

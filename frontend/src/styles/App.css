@@ -6,16 +6,23 @@
   height: 100dvh;
   width: 100dvw;
   overflow: hidden;
+  background-color: var(--back);
 
   --header-height: 40px;
   --footer-height: 30px;
   --content-height: calc(100dvh - var(--header-height) - var(--footer-height));
 
-  --text: #ff7171;
+  --text: #500000;
   --text-hover: #ff4f4f;
   --text-link: #fa255e;
-  --text-dark: #500000;
-  --back: #fff0f0;
+  --text-light: #ff7171;
+  --back: #ffeeee;
   --back-hover: #ffcece;
   --back-light: #fffbfb;
+}
+
+#container,
+body,
+html {
+  background: transparent;
 }

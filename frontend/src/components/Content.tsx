@@ -1,7 +1,44 @@
 import '../styles/Content.css'
 import { BrowserStatus } from '../App'
-import { GetTimetable } from '../../wailsjs/go/main/App'
-import { useRef } from 'react'
+import { Dialog } from '../wailsjs/go/main/App'
+import { Form, Radio, Input, Button } from 'antd'
+import type { CheckboxOptionType } from 'antd'
+import { useState } from 'react'
+
+// 表单选项
+const option: {
+  [key: string]: CheckboxOptionType[]
+} = {
+  mode: [ // 抢课模式
+    { label: '抢课', value: '抢课' },
+    { label: '蹲课', value: '蹲课' },
+  ],
+  speed: [ // 刷新频率
+    { label: '每半秒', value: 500 },
+    { label: '每秒', value: 1000 },
+    { label: '每五秒', value: 5000 },
+    { label: '每十秒', value: 10000 },
+  ],
+}
+// 表单选项
+const input: {
+  [key: string]: { placeholder: string, defaultValue?: string }
+} = {
+  studentID: {
+    placeholder: '请输入学号',
+    defaultValue: localStorage.getItem('studentID') || '',
+  },
+  password: {
+    placeholder: '请输入密码',
+    defaultValue: localStorage.getItem('password') || '',
+  },
+  courseID: {
+    placeholder: '请输入课程代码',
+  },
+  classID: {
+    placeholder: '请输入班级代码',
+  },
+}
 
 interface ContentProps {
   browserStatus: BrowserStatus
@@ -9,39 +46,21 @@ interface ContentProps {
 
 export function Content({ browserStatus }: ContentProps) {
 
-  // 引用
-  const usernameRef = useRef<HTMLInputElement>(null)
-  const passwordRef = useRef<HTMLInputElement>(null)
-  const buttonRef = useRef<HTMLInputElement>(null)
-
-  // 获取课表
-  function handleGetTimetable(browserStatus: BrowserStatus) {
+  // 表单是否禁用
+  const [disableForm, setDisableForm] = useState<boolean>(false)
+ 
+  // 表单提交回调
+  function handleSubmit(browserStatus: BrowserStatus) {
     if (browserStatus.status === '安装中') {
-      alert('请等待浏览器安装完成 (首次启动耗时较长)')
+      Dialog('warning', '请等待浏览器安装完成')
       return
     } else if (browserStatus.status === '安装失败') {
-      alert('浏览器安装失败, 请检查网络连接并重启应用')
+      Dialog('error', '浏览器安装失败, 请检查网络并尝试重启应用')
       return
     }
-    const username = usernameRef.current?.value
-    const password = passwordRef.current?.value
-    if (!username || !password) {
-      alert('请输入学号和密码')
-      return
-    }
-    buttonRef.current?.setAttribute('disabled', 'disabled')
-    buttonRef.current?.setAttribute('value', '正在获取课表...')
-    GetTimetable(username, password, false)
-      .then(() => {
-        alert('获取课表成功, 截图已保存至当前目录')
-        buttonRef.current?.removeAttribute('disabled')
-        buttonRef.current?.setAttribute('value', '获取课表截图')
-      })
-      .catch(e => {
-        alert(`获取课表失败: ${e}`)
-        buttonRef.current?.removeAttribute('disabled')
-        buttonRef.current?.setAttribute('value', '获取课表截图')
-      })
+    setDisableForm(true)
+    Dialog('info', '开始抢课 (๑•̀ㅂ•́)و✧')
+      .then(() => setDisableForm(false))
   }
 
   return (
@@ -49,14 +68,100 @@ export function Content({ browserStatus }: ContentProps) {
       id='content'
     >
 
-      <h3>以下为测试功能</h3>
+      <Form
+        name='form'
+        labelCol={{ span: 6 }}
+        wrapperCol={{ span: 16 }}
+        disabled={disableForm}
+        initialValues={{
+          mode: '抢课',
+          speed: 1000,
+          studentID: input.studentID.defaultValue,
+          password: input.password.defaultValue,
+          courseID: input.courseID.defaultValue,
+        }}
+        style={{ 
+          width: '90%',
+          maxWidth: 600 
+        }}
+        onFinish={() => handleSubmit(browserStatus)}
+      >
+          
+          <Form.Item
+            label='抢课模式'
+            name='mode'
+            rules={[{ required: true, message: '请选择抢课模式' }]}
+          >
+            <Radio.Group
+              options={option.mode}
+              optionType='button'
+              buttonStyle='solid'
+            />
+          </Form.Item>
+  
+          <Form.Item
+            label='刷新频率'
+            name='speed'
+            rules={[{ required: true, message: '请选择刷新频率' }]}
+          >
+            <Radio.Group
+              options={option.speed}
+              optionType='button'
+              buttonStyle='solid'
+            />
+          </Form.Item>
+  
+          <Form.Item
+            label='学号'
+            name='studentID'
+            rules={[{ required: true, message: '请输入学号' }]}
+          >
+            <Input
+              placeholder={input.studentID.placeholder}
+            />
+          </Form.Item>
+  
+          <Form.Item
+            label='密码'
+            name='password'
+            rules={[{ required: true, message: '请输入密码' }]}
+          >
+            <Input.Password
+              placeholder={input.password.placeholder}
+            />
+          </Form.Item>
+  
+          <Form.Item
+            label='课程代码'
+            name='courseID'
+            rules={[{ required: true, message: '请输入课程代码' }]}
+          >
+            <Input
+              placeholder={input.courseID.placeholder}
+            />
+          </Form.Item>
+  
+          <Form.Item
+            label='班级代码'
+            name='classID'
+          >
+            <Input
+              placeholder={input.classID.placeholder}
+            />
+          </Form.Item>
 
-      <input type="text" placeholder='学号' ref={usernameRef} />
-      <input type="password" placeholder='密码' ref={passwordRef} />
-      <input type="button" value='获取课表截图' onClick={e => {
-        e.preventDefault()
-        handleGetTimetable(browserStatus)
-      }} ref={buttonRef} />
+          <Form.Item
+            wrapperCol={{ offset: 6, span: 16 }}
+          >
+            <Button
+              type='primary'
+              htmlType='submit'
+            >
+              开始
+            </Button>
+          </Form.Item>
+
+      </Form>
 
     </div>
   )

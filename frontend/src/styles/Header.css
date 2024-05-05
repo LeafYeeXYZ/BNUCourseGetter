@@ -16,7 +16,7 @@
     height: var(--header-height);
     border: none;
     outline: none;
-    color: var(--text-dark);
+    color: var(--text);
     background-color: var(--back);
     &:hover {
       background-color: var(--back-hover);

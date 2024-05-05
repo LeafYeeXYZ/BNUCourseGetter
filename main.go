@@ -22,7 +22,7 @@ func main() {
 		Title:  "小鸦抢课",
 		Width:  1024,
 		Height: 768,
-		MinWidth: 512,
+		MinWidth: 640,
 		MinHeight: 512,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
