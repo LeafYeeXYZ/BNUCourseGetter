@@ -1,4 +1,4 @@
-module bnu-course-getter
+module github.com/LeafYeeXYZ/BNUCourseGetter
 
 go 1.21
 
@@ -42,5 +42,3 @@ require (
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
-
-// replace github.com/wailsapp/wails/v2 v2.8.1 => C:\Users\叶一杉\go\pkg\mod
