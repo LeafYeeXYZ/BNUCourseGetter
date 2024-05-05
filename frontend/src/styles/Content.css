@@ -1,0 +1,10 @@
+#content {
+  width: 100dvw;
+  height: var(--content-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: var(--back-light);
+}

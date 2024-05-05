@@ -1,0 +1,27 @@
+#footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  height: var(--footer-height);
+  width: 100dvw;
+  color: var(--text);
+  background-color: var(--back);
+
+  & .footer-info,
+  & .footer-browser {
+    height: var(--footer-height);
+    border: none;
+    outline: none;
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: var(--footer-height);
+  }
+  & .footer-browser {
+    text-align: left;
+    padding-left: 15px;
+  }
+  & .footer-info {
+    text-align: right;
+    padding-right: 15px;
+    cursor: pointer;
+  }
+}

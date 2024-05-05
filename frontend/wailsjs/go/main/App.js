@@ -5,3 +5,7 @@
 export function GetTimetable(arg1, arg2, arg3) {
   return window['go']['main']['App']['GetTimetable'](arg1, arg2, arg3);
 }
+
+export function InstallBrowser() {
+  return window['go']['main']['App']['InstallBrowser']();
+}

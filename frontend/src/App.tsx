@@ -1,36 +1,54 @@
-import { GetTimetable } from '../wailsjs/go/main/App'
-import { useState } from 'react'
 import './styles/App.css'
+import {
+  LoadingOutlined,
+  CloseOutlined,
+  CheckOutlined,
+} from '@ant-design/icons'
+
+import { InstallBrowser } from '../wailsjs/go/main/App'
+import { useState, useEffect } from 'react'
+
+import { Header } from './components/Header'
+import { Footer } from './components/Footer'
+import { Content } from './components/Content'
+
+export type BrowserStatus = {
+  status: '安装中' | '已安装' | '安装失败'
+  icon: React.JSX.Element
+}
 
 function App() {
 
-  const [status, setStatus] = useState<string>('空闲')
+  // 阻止双击, 选中文字, 右键菜单等默认事件
+  useEffect(() => {
+    document.addEventListener('contextmenu', e => e.preventDefault())
+    document.addEventListener('selectstart', e => e.preventDefault())
+    document.addEventListener('dblclick', e => e.preventDefault())
+  }, [])
 
-  function timetable() {
-    const studentID = prompt("Enter your student ID")
-    const password = prompt("Enter your password")
-    const isBusy = confirm("Are system busy?")
-    if (!studentID || !password) {
-      alert("Please enter your student ID and password")
-      return
-    }
-
-    setStatus('获取中...(首次运行会下载chromium, 可能需要较长时间, 请耐心等待)')
-
-    GetTimetable(studentID, password, isBusy)
-      .then(() => {
-        setStatus('空闲')
-        alert('课程表截图已保存')
-      })
-      .catch((e: Error) => {
-        alert(`Error: ${e.message}; 请尝试以管理员身份运行程序`)
-      })
-  }
+  // 是否安装了 chromium
+  const [browserStatus, setBrowserStatus] = useState<BrowserStatus>({ status: '安装中', icon: <LoadingOutlined /> })
+  
+  // 安装浏览器
+  useEffect(() => {
+    InstallBrowser()
+      .then(() => setBrowserStatus({ status: '已安装', icon: <CheckOutlined /> }))
+      .catch(() => setBrowserStatus({ status: '安装失败', icon: <CloseOutlined /> }))
+  }, [])
 
   return (
     <main id="container">
-      <button onClick={timetable}>获取课程表并保存截图</button>
-      <p>Status: {status}</p>
+
+      <Header />
+
+      <Content 
+        browserStatus={browserStatus}
+      />
+
+      <Footer 
+        browserStatus={browserStatus}
+      />
+
     </main>
   )
 }

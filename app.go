@@ -23,9 +23,13 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
+// 安装浏览器
+func (a *App) InstallBrowser() error {
+	return playwright.Install()
+}
+
 func (a *App) GetTimetable(studentID string, password string, isBusy bool) error {
 	// 安装浏览器
-	fmt.Println("安装浏览器")
 	err := playwright.Install()
 	if err != nil { return err }
 

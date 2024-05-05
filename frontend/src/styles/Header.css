@@ -1,0 +1,33 @@
+#header {
+  display: grid;
+  grid-template-columns: 
+    1fr 
+    var(--header-height) 
+    var(--header-height) 
+    var(--header-height);
+  height: var(--header-height);
+  width: 100dvw;
+  color: var(--text);
+  background-color: var(--back);
+
+  & .header-close,
+  & .header-max,
+  & .header-min {
+    height: var(--header-height);
+    border: none;
+    outline: none;
+    color: var(--text-dark);
+    background-color: var(--back);
+    &:hover {
+      background-color: var(--back-hover);
+    }
+  }
+
+  & .header-title {
+    height: var(--header-height);
+    padding: 10px 15px;
+    line-height: calc(var(--header-height) - 20px);
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+}

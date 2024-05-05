@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "bnu-course-getter",
-  "outputfilename": "bnu-course-getter",
+  "name": "小鸦抢课",
+  "outputfilename": "小鸦抢课",
   "frontend:install": "pnpm install",
   "frontend:build": "pnpm build",
   "frontend:dev:watcher": "pnpm dev",

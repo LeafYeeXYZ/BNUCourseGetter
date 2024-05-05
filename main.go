@@ -6,6 +6,8 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
 )
 
 //go:embed all:frontend/dist
@@ -17,16 +19,31 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "bnu-course-getter",
+		Title:  "小鸦抢课",
 		Width:  1024,
 		Height: 768,
+		MinWidth: 512,
+		MinHeight: 512,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
+		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 0},
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
+		},
+		Frameless: true,
+		Windows: &windows.Options{
+			WebviewIsTransparent: true,
+			WindowIsTranslucent: true,
+			BackdropType: 2,
+		},
+		Mac: &mac.Options{
+			WebviewIsTransparent: true,
+			WindowIsTranslucent: true,
+		},
+		Debug: options.Debug{
+			OpenInspectorOnStartup: true,
 		},
 	})
 
