@@ -51,8 +51,8 @@ export function Content({ browserStatus }: ContentProps) {
 
       <h3>以下为测试功能</h3>
 
-      <input type="text" placeholder='学号' />
-      <input type="password" placeholder='密码' />
+      <input type="text" placeholder='学号' ref={usernameRef} />
+      <input type="password" placeholder='密码' ref={passwordRef} />
       <input type="button" value='获取课表截图' onClick={e => {
         e.preventDefault()
         handleGetTimetable(browserStatus)
