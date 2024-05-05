@@ -37,6 +37,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3.0.0
         with:
+          version: 'latest'
           package_json_file: 'frontend/package.json'
 
       - name: Build wails
