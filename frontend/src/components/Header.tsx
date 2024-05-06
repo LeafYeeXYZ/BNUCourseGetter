@@ -6,13 +6,17 @@ import {
   WindowReload,
   Hide,
   Show,
+  WindowSetAlwaysOnTop,
 } from '../wailsjs/runtime/runtime'
 import { Dialog } from '../wailsjs/go/main/App'
+import { useState } from 'react'
 import { 
   CloseOutlined,
   ExpandOutlined,
   MinusOutlined,
   RedoOutlined,
+  PushpinOutlined,
+  PushpinFilled,
 } from '@ant-design/icons'
 
 interface HeaderProps {
@@ -20,6 +24,9 @@ interface HeaderProps {
 }
 
 export function Header({ systemStatus }: HeaderProps ) {
+
+  // 窗口置顶按钮
+  const [isAlwaysOnTop, setIsAlwaysOnTop] = useState<boolean>(localStorage.getItem('isAlwaysOnTop') === 'true')
 
   return (
     <header 
@@ -37,6 +44,19 @@ export function Header({ systemStatus }: HeaderProps ) {
       </p>
 
       <button
+        title={isAlwaysOnTop ? '取消置顶' : '窗口置顶'}
+        className='header-pin'
+        onClick={() => {
+          WindowSetAlwaysOnTop(!isAlwaysOnTop)
+          setIsAlwaysOnTop(!isAlwaysOnTop)
+          localStorage.setItem('isAlwaysOnTop', (!isAlwaysOnTop).toString())
+        }}
+      >
+        {isAlwaysOnTop ? <PushpinFilled /> : <PushpinOutlined />}
+      </button>
+
+      <button
+        title='刷新'
         className='header-reload'
         onClick={() => {
           Dialog('question', '确定要刷新窗口吗 (oﾟvﾟ)/')
@@ -53,6 +73,7 @@ export function Header({ systemStatus }: HeaderProps ) {
       </button>
 
       <button
+        title='最小化窗口'
         className='header-min'
         onClick={() => WindowMinimise()}
       >
@@ -60,6 +81,7 @@ export function Header({ systemStatus }: HeaderProps ) {
       </button>
 
       <button
+        title='最大化窗口'
         className='header-max'
         onClick={() => WindowToggleMaximise()}
       >
@@ -67,6 +89,7 @@ export function Header({ systemStatus }: HeaderProps ) {
       </button>
 
       <button
+        title='退出'
         className='header-close'
         onClick={() => Quit()}
       >

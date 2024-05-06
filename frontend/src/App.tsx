@@ -1,4 +1,6 @@
 import './styles/App.css'
+import { ConfigProvider } from 'antd'
+import { AntdConfig } from './libs/antd'
 import {
   LoadingOutlined,
   CloseOutlined,
@@ -36,7 +38,7 @@ function App() {
       .catch(() => setBrowserStatus({ status: '安装失败', icon: <CloseOutlined /> }))
   }, [])
 
-  // 用于标识系统状态的 state 和 event
+  // 用于标识系统状态的 state 和 event, 仅使用事件修改状态!!!
   const [systemStatus, setSystemStatus] = useState<string>('加载中')
   useEffect(() => {
     EventsOn('systemStatus', (status: string) => setSystemStatus(status))
@@ -44,7 +46,7 @@ function App() {
     return () => EventsOff('systemStatus')
   }, [])
   
-  // 用于标识当前输出的 state 和 event
+  // 用于标识当前输出的 state 和 event, 仅使用事件修改状态!!!
   const [currentStatus, setCurrentStatus] = useState<string>(`${new Date().toLocaleTimeString()} 加载中`)
   useEffect(() => {
     EventsOn('currentStatus', (status: string) => setCurrentStatus(`${new Date().toLocaleTimeString()} ${status}`))
@@ -55,18 +57,23 @@ function App() {
   return (
     <main id="container">
 
-      <Header 
-        systemStatus={systemStatus}
-      />
+      <ConfigProvider {...AntdConfig}>
 
-      <Content 
-        browserStatus={browserStatus}
-      />
+        <Header 
+          systemStatus={systemStatus}
+        />
 
-      <Footer 
-        browserStatus={browserStatus}
-        currentStatus={currentStatus}
-      />
+        <Content 
+          browserStatus={browserStatus}
+          systemStatus={systemStatus}
+        />
+
+        <Footer 
+          browserStatus={browserStatus}
+          currentStatus={currentStatus}
+        />
+
+      </ConfigProvider>
 
     </main>
   )
