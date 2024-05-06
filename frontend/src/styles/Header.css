@@ -4,12 +4,14 @@
     1fr 
     var(--header-height) 
     var(--header-height) 
+    var(--header-height)
     var(--header-height);
   height: var(--header-height);
   width: 100dvw;
   color: var(--text);
   background-color: var(--back);
 
+  & .header-reload,
   & .header-close,
   & .header-max,
   & .header-min {

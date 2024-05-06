@@ -1,13 +1,15 @@
 #footer {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1.2fr 3fr 1fr;
   height: var(--footer-height);
   width: 100dvw;
   color: var(--text);
   background-color: var(--back);
 
+  & .footer-status,
   & .footer-info,
   & .footer-browser {
+    text-align: center;
     height: var(--footer-height);
     border: none;
     outline: none;
@@ -23,5 +25,11 @@
     text-align: right;
     padding-right: 15px;
     cursor: pointer;
+  }
+  & .footer-status {
+    /* 超出文字省略号 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

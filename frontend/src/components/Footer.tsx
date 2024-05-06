@@ -5,9 +5,10 @@ import { ExportOutlined } from '@ant-design/icons'
 
 interface FooterProps {
   browserStatus: BrowserStatus
+  currentStatus: string
 }
 
-export function Footer({ browserStatus }: FooterProps) {
+export function Footer({ browserStatus, currentStatus }: FooterProps) {
 
   return (
     <footer
@@ -21,7 +22,11 @@ export function Footer({ browserStatus }: FooterProps) {
         <span>{browserStatus.status} {browserStatus.icon}</span>
       </p>
 
-      <p></p>
+      <p
+        className='footer-status'
+      >
+        <span>{currentStatus}</span>
+      </p>
       
       <p
         className='footer-info'

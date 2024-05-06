@@ -6,6 +6,7 @@ import {
 } from '@ant-design/icons'
 
 import { InstallBrowser } from './wailsjs/go/main/App'
+import { EventsEmit, EventsOn, EventsOff } from './wailsjs/runtime/runtime'
 import { useState, useEffect } from 'react'
 
 import { Header } from './components/Header'
@@ -28,7 +29,6 @@ function App() {
 
   // 是否安装了 chromium
   const [browserStatus, setBrowserStatus] = useState<BrowserStatus>({ status: '安装中', icon: <LoadingOutlined /> })
-  
   // 安装浏览器
   useEffect(() => {
     InstallBrowser()
@@ -37,15 +37,27 @@ function App() {
   }, [])
 
   // 用于标识系统状态的 state 和 event
-  /// TODO
-
+  const [systemStatus, setSystemStatus] = useState<string>('加载中')
+  useEffect(() => {
+    EventsOn('systemStatus', (status: string) => setSystemStatus(status))
+    EventsEmit('systemStatus', '空闲')
+    return () => EventsOff('systemStatus')
+  }, [])
+  
   // 用于标识当前输出的 state 和 event
-  /// TODO
+  const [currentStatus, setCurrentStatus] = useState<string>(`${new Date().toLocaleTimeString()} 加载中`)
+  useEffect(() => {
+    EventsOn('currentStatus', (status: string) => setCurrentStatus(`${new Date().toLocaleTimeString()} ${status}`))
+    EventsEmit('currentStatus', '系统已启动')
+    return () => EventsOff('currentStatus')
+  }, [])
 
   return (
     <main id="container">
 
-      <Header />
+      <Header 
+        systemStatus={systemStatus}
+      />
 
       <Content 
         browserStatus={browserStatus}
@@ -53,6 +65,7 @@ function App() {
 
       <Footer 
         browserStatus={browserStatus}
+        currentStatus={currentStatus}
       />
 
     </main>
