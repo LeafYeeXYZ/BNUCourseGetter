@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"github.com/playwright-community/playwright-go"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // 蹲课模式主函数
-func (a *App) WatchCourse(studentID string, password string, isBusy bool) error {
+func (a *App) WatchCourse(speed int, studentID string, password string, courseID string, classID string) error {
+  // 发送事件
+	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课 - " + fmt.Sprint(speed) + " - " + courseID + " - " + classID)
+
 	// 安装浏览器
 	err := playwright.Install()
 	if err != nil { return err }
@@ -23,12 +26,7 @@ func (a *App) WatchCourse(studentID string, password string, isBusy bool) error 
 	if err != nil { return err }
 
 	// 创建页面实例
-	page, err := browser.NewPage(playwright.BrowserNewPageOptions{
-		Viewport: &playwright.Size{
-			Width: 2160,
-			Height: 1440,
-		},
-	})
+	page, err := browser.NewPage()
 	if err != nil { return err }
 
 	// 跳转到登录页面
@@ -48,10 +46,13 @@ func (a *App) WatchCourse(studentID string, password string, isBusy bool) error 
 	if err != nil { return err }
 
 	// 如果有, 点击 "继续访问原地址"
-	if isBusy {
-		err = page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a").Click()
+	runtime.EventsEmit(a.ctx, "currentStatus", "已尝试登录, 正在判断是否需要点击\"继续访问原地址\"")
+	ele := page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
+	if exists, _ := ele.IsVisible(); exists {
+		err = ele.Click()
 		if err != nil { return err }
 	}
+
 	// 点击 "网上选课"
 	err = page.Locator("li[data-code=\"JW1304\"]").Click()
 	if err != nil { return err }
@@ -63,8 +64,9 @@ func (a *App) WatchCourse(studentID string, password string, isBusy bool) error 
 	})
 	if iframe == nil { return fmt.Errorf("找不到 iframe") }
 
-	// 点击 "我的课表"
-	err = iframe.Locator("#title2135").Click()
+	runtime.EventsEmit(a.ctx, "currentStatus", "进入选课界面")
+	// 点击 "按开课计划抢课"
+	err = iframe.Locator("#title1785").Click()
 	if err != nil { return err }
 
 	// 等待加载
@@ -72,24 +74,17 @@ func (a *App) WatchCourse(studentID string, password string, isBusy bool) error 
 		State: playwright.LoadStateNetworkidle,
 	})
 
-	// 点击 "按课表查看"
-	err = iframe.Locator("#cxfs_ewb").Click()
-	if err != nil { return err }
+	// "所有院系开设课程"
+	ele = iframe.Locator("#kkdw_range_all")
+	if disabled, _ := ele.IsDisabled(); disabled {
+		browser.Close()
+		pw.Stop()
+		return fmt.Errorf("当前时间不是有效的选课时间区段")
+	}
 
-	// 点击 "检索"
-	err = iframe.Locator("#btnQry").Click()
-	if err != nil { return err }
 
-	// 等待加载
-	iframe.WaitForTimeout(1000)
-	// 截图
-	var buf []byte
-	buf, err = page.Screenshot()
-	if err != nil { return err }
-		
-	// 保存截图
-	err = os.WriteFile("screenshot.png", buf, 0644)
-	if err != nil { return err }
+	
+
 
 	// 关闭浏览器
 	err = browser.Close()
@@ -98,6 +93,9 @@ func (a *App) WatchCourse(studentID string, password string, isBusy bool) error 
 	// 关闭 Playwright 实例
 	err = pw.Stop()
 	if err != nil { return err }
+
+	// 发送事件
+	runtime.EventsEmit(a.ctx, "currentStatus", "蹲课成功: " + courseID + " - " + classID) 
 
 	return nil
 }

@@ -5,6 +5,7 @@ import { Form, Radio, Input, Button, Switch } from 'antd'
 import type { CheckboxOptionType } from 'antd'
 import { useState } from 'react'
 import { EventsEmit } from '../wailsjs/runtime/runtime'
+import { CatchCourse, WatchCourse } from '../wailsjs/go/main/App'
 
 // 表单选项
 const option: {
@@ -22,20 +23,26 @@ const option: {
   ],
 }
 
+// 抢课函数
+const funcs = {
+  CatchCourse,
+  WatchCourse,
+}
+
 interface ContentProps {
   browserStatus: BrowserStatus
   systemStatus: string
 }
 
-/**
- * localStorage 存储的数据
- * @var {'CatchCourse' | 'WatchCourse'} mode 抢课模式
- * @var {string} studentID 学号
- * @var {string} password 密码
- * @var {string} courseID 课程代码
- * @var {string} classID 班级代码
- * @var {'yes' | 'no'} isRemember 是否记住密码
- */
+type FormValues = { // 如果修改, 记得同步修改 Go 端
+  mode: 'CatchCourse' | 'WatchCourse' // 存在 localStorage
+  speed: number // 存在 localStorage
+  studentID: string // 存在 localStorage
+  password: string // 存在 localStorage (如果记住密码)
+  courseID: string // 存在 localStorage
+  classID: string // 存在 localStorage
+  [key: string]: string | number
+}
 
 export function Content({ browserStatus, systemStatus }: ContentProps) {
 
@@ -43,7 +50,7 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
   const [disableForm, setDisableForm] = useState<boolean>(false)
  
   // 表单提交回调
-  function handleSubmit(browserStatus: BrowserStatus, systemStatus: string, value: { [key: string]: unknown }) {
+  function handleSubmit(browserStatus: BrowserStatus, systemStatus: string, value: FormValues) {
     // 检查浏览器状态
     if (browserStatus.status === '安装中') {
       Dialog('warning', '请等待浏览器安装完成')
@@ -57,39 +64,31 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
     setDisableForm(true)
 
     // 保存相关数据
-    if (localStorage.getItem('isRemember') === 'yes') {
-      localStorage.setItem('password', value.password as string)
-    }
-    localStorage.setItem('studentID', value.studentID as string)
-    localStorage.setItem('mode', value.mode as string)
-    localStorage.setItem('courseID', value.courseID as string)
-    localStorage.setItem('classID', value.classID ? value.classID as string : '')
+    for (const key in value) { localStorage.setItem(key, String(value[key])) }
+    localStorage.getItem('isRemember') === 'no' && localStorage.setItem('password', '') // 清除密码
 
     // 发送开始抢课事件
-    if (systemStatus !== '空闲') {
-      Dialog('warning', `请等待当前 ${systemStatus} 状态结束`)
-      setDisableForm(false)
-      return
-    } else if (value.mode === 'WatchCourse') {
-      EventsEmit('systemStatus', '蹲课中')
-      EventsEmit('currentStatus', '开始蹲课 (๑•̀ㅂ•́)و✧')
-    } else if (value.mode === 'CatchCourse') {
-      EventsEmit('systemStatus', '抢课中')
-      EventsEmit('currentStatus', '开始抢课 (๑•̀ㅂ•́)و✧')
-    }
-    
-    // 开始抢课
-    Dialog('info', '开始抢课 (并不会开始)')
-      .then(res => {
-        EventsEmit('currentStatus', res || '抢课成功')
-      })
+    Dialog('info', '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭浏览器')
+    .then(() => {
+      if (systemStatus !== '空闲') {
+        Dialog('error', `请等待当前 ${systemStatus} 状态结束`)
+        setDisableForm(false)
+        return
+      } else if (value.mode === 'WatchCourse') {
+        EventsEmit('systemStatus', '蹲课中')
+      } else if (value.mode === 'CatchCourse') {
+        EventsEmit('systemStatus', '抢课中')
+      }
+      // 抢课函数
+      funcs[value.mode](value.speed, value.studentID, value.password, value.courseID, value.classID)
       .catch(err => {
-        EventsEmit('currentStatus', err.message || '抢课失败')
+        EventsEmit('currentStatus', err || '选课失败')
       })
       .finally(() => {
         EventsEmit('systemStatus', '空闲')
         setDisableForm(false)
       })
+    })
   }
 
   return (
@@ -105,10 +104,11 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
         autoComplete='off'
         initialValues={{
           mode: localStorage.getItem('mode') || 'CatchCourse',
-          speed: 1000,
+          speed: Number(localStorage.getItem('speed')) || 1000,
           studentID: localStorage.getItem('studentID') || '',
           password: localStorage.getItem('password') || '',
           courseID: localStorage.getItem('courseID') || '',
+          classID: localStorage.getItem('classID') || '',
         }}
         style={{ 
           width: '90%',
@@ -174,6 +174,7 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
           <Form.Item
             label='班级代码'
             name='classID'
+            rules={[{ required: true, message: '请输入班级代码' }]}
           >
             <Input
               placeholder='请输入班级代码'
