@@ -1,14 +1,12 @@
 import '../styles/Footer.css'
 import { BrowserStatus } from '../App'
-import { BrowserOpenURL } from '../wailsjs/runtime/runtime'
-import { ExportOutlined } from '@ant-design/icons'
+import { Link } from './Link'
 
 interface FooterProps {
   browserStatus: BrowserStatus
-  currentStatus: string
 }
 
-export function Footer({ browserStatus, currentStatus }: FooterProps) {
+export function Footer({ browserStatus }: FooterProps) {
 
   return (
     <footer
@@ -18,26 +16,20 @@ export function Footer({ browserStatus, currentStatus }: FooterProps) {
       <p
         className='footer-browser'
       >
-        <span>浏览器状态: </span>
-        <span>{browserStatus.status} {browserStatus.icon}</span>
+        <span>浏览器: {browserStatus.status} {browserStatus.icon}</span>
       </p>
 
       <p
         className='footer-status'
       >
-        <span>{currentStatus}</span>
+        <span>本工具开源免费, 欢迎在 <Link href='https://github.com/LeafYeeXYZ/BNUCourseGetter'><span>Github</span></Link> 上参与本项目!</span>
       </p>
       
       <p
         className='footer-info'
       >
-        <a
-          className='footer-github'
-          onClick={e => {
-            e.preventDefault()
-            BrowserOpenURL('https://github.com/LeafYeeXYZ/BNUCourseGetter')
-          }}
-        >作者: 小叶子 <ExportOutlined /></a>
+        <Link href='https://github.com/LeafYeeXYZ'
+        ><span>原作者: 小叶子</span></Link>
       </p>
 
     </footer>

@@ -20,6 +20,9 @@ export type BrowserStatus = {
   icon: React.JSX.Element
 }
 
+export type SystemStatus = '加载中' | '空闲' | '抢课中' | '蹲课中'
+export type CurrentStatus = React.JSX.Element[]
+
 function App() {
 
   // 阻止双击, 选中文字, 右键菜单等默认事件
@@ -29,7 +32,7 @@ function App() {
     document.addEventListener('dblclick', e => e.preventDefault())
   }, [])
 
-  // 是否安装了 chromium
+  // 是否安装了 chromium, 仅在此处修改状态!!!
   const [browserStatus, setBrowserStatus] = useState<BrowserStatus>({ status: '安装中', icon: <LoadingOutlined /> })
   // 安装浏览器
   useEffect(() => {
@@ -39,17 +42,17 @@ function App() {
   }, [])
 
   // 用于标识系统状态的 state 和 event, 仅使用事件修改状态!!!
-  const [systemStatus, setSystemStatus] = useState<string>('加载中')
+  const [systemStatus, setSystemStatus] = useState<SystemStatus>('加载中')
   useEffect(() => {
-    EventsOn('systemStatus', (status: string) => setSystemStatus(status))
+    EventsOn('systemStatus', (status: SystemStatus) => setSystemStatus(status))
     EventsEmit('systemStatus', '空闲')
     return () => EventsOff('systemStatus')
   }, [])
   
   // 用于标识当前输出的 state 和 event, 仅使用事件修改状态!!!
-  const [currentStatus, setCurrentStatus] = useState<string>(`${new Date().toLocaleTimeString()} 加载中`)
+  const [currentStatus, setCurrentStatus] = useState<CurrentStatus>([<span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;开始加载</span>])
   useEffect(() => {
-    EventsOn('currentStatus', (status: string) => setCurrentStatus(`${new Date().toLocaleTimeString()} ${status}`))
+    EventsOn('currentStatus', (status: string) => setCurrentStatus(prev => [...prev, <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>]))
     EventsEmit('currentStatus', '系统已启动')
     return () => EventsOff('currentStatus')
   }, [])
@@ -66,11 +69,11 @@ function App() {
         <Content 
           browserStatus={browserStatus}
           systemStatus={systemStatus}
+          currentStatus={currentStatus}
         />
 
         <Footer 
           browserStatus={browserStatus}
-          currentStatus={currentStatus}
         />
 
       </ConfigProvider>

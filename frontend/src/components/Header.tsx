@@ -18,9 +18,10 @@ import {
   PushpinOutlined,
   PushpinFilled,
 } from '@ant-design/icons'
+import type { SystemStatus } from '../App'
 
 interface HeaderProps {
-  systemStatus: string
+  systemStatus: SystemStatus
 }
 
 export function Header({ systemStatus }: HeaderProps ) {

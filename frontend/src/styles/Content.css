@@ -1,9 +1,47 @@
 #content {
   width: 100dvw;
   height: var(--content-height);
+  padding: 1.5rem 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+
   background-color: var(--back-light);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--back-hover) var(--back-light);
+
+  & .content-logs {
+    width: 80%;
+    max-width: 35rem;
+    height: 10rem;
+    min-height: 10rem;
+    overflow: auto;
+    scrollbar-width: none;
+    padding: 0.55rem 0.75rem;
+    
+    text-align: left;
+    line-height: 1.3rem;
+    font-size: 0.8rem;
+    border-radius: 1rem;
+
+    color: var(--text);
+    background-color: var(--back-logs);
+    border: 1.5px solid var(--back-hover);
+
+    & .content-logs-item {
+      white-space: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      opacity: 0.85;
+    }
+  }
+}
+
+@media screen and (min-height: 672px) {
+  #content {
+    justify-content: center;
+  }  
 }

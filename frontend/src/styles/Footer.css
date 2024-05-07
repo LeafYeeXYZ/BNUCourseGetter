@@ -1,6 +1,6 @@
 #footer {
   display: grid;
-  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-columns: 7.7rem 1fr 7.7rem;
   height: var(--footer-height);
   width: 100dvw;
   color: var(--text);
@@ -20,11 +20,12 @@
   & .footer-browser {
     text-align: left;
     padding-left: 15px;
+    background-color: var(--back-dark);
   }
   & .footer-info {
     text-align: right;
     padding-right: 15px;
-    cursor: pointer;
+    background-color: var(--back-dark);
   }
   & .footer-status {
     white-space: nowrap;

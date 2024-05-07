@@ -94,6 +94,8 @@ func (a *App) CatchCourse(speed int, studentID string, password string, courseID
 
 		// 循环监控课程
 		/// TO BE IMPLEMENTED
+		err = page.Locator("body").Focus()
+		if err != nil { return err }
 	
 		// 关闭浏览器
 		err = browser.Close()

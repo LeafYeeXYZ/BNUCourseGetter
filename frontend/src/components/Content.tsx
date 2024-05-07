@@ -1,9 +1,9 @@
 import '../styles/Content.css'
-import { BrowserStatus } from '../App'
 import { Dialog } from '../wailsjs/go/main/App'
 import { Form, Radio, Input, Button, Switch } from 'antd'
 import type { CheckboxOptionType } from 'antd'
-import { useState } from 'react'
+import type { SystemStatus, BrowserStatus, CurrentStatus } from '../App'
+import { useState, useRef, useEffect } from 'react'
 import { EventsEmit } from '../wailsjs/runtime/runtime'
 import { CatchCourse, WatchCourse } from '../wailsjs/go/main/App'
 
@@ -31,7 +31,8 @@ const funcs = {
 
 interface ContentProps {
   browserStatus: BrowserStatus
-  systemStatus: string
+  systemStatus: SystemStatus
+  currentStatus: CurrentStatus
 }
 
 type FormValues = { // 如果修改, 记得同步修改 Go 端
@@ -44,13 +45,13 @@ type FormValues = { // 如果修改, 记得同步修改 Go 端
   [key: string]: string | number
 }
 
-export function Content({ browserStatus, systemStatus }: ContentProps) {
+export function Content({ browserStatus, systemStatus, currentStatus }: ContentProps) {
 
   // 表单是否禁用
   const [disableForm, setDisableForm] = useState<boolean>(false)
  
   // 表单提交回调
-  function handleSubmit(browserStatus: BrowserStatus, systemStatus: string, value: FormValues) {
+  function handleSubmit(browserStatus: BrowserStatus, systemStatus: SystemStatus, value: FormValues) {
     // 检查浏览器状态
     if (browserStatus.status === '安装中') {
       Dialog('warning', '请等待浏览器安装完成')
@@ -68,8 +69,14 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
     localStorage.getItem('isRemember') === 'no' && localStorage.setItem('password', '') // 清除密码
 
     // 发送开始抢课事件
-    Dialog('info', '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭浏览器')
-    .then(() => {
+    Dialog('question', '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭浏览器\n是否继续?')
+    .then(res => {
+      // 如果不点击 Yes, 则不执行
+      if (res !== 'Yes') {
+        setDisableForm(false)
+        return
+      }
+      // 检查并设置系统状态
       if (systemStatus !== '空闲') {
         Dialog('error', `请等待当前 ${systemStatus} 状态结束`)
         setDisableForm(false)
@@ -91,6 +98,16 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
     })
   }
 
+  // 日志列表
+  const logs = currentStatus.map((status, index) => (
+    <p key={index} className='content-logs-item'>{status}</p>
+  ))
+  // 自动滚动到底部
+  const logsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    logsRef.current?.scrollTo(0, logsRef.current.scrollHeight)
+  }, [logs])
+
   return (
     <div
       id='content'
@@ -98,6 +115,7 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
 
       <Form
         name='form'
+        className='content-form'
         labelCol={{ span: 6 }}
         wrapperCol={{ span: 16 }}
         disabled={disableForm}
@@ -112,7 +130,8 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
         }}
         style={{ 
           width: '90%',
-          maxWidth: 600 
+          maxWidth: 600,
+          paddingRight: 13,
         }}
         onFinish={value => handleSubmit(browserStatus, systemStatus, value)}
       >
@@ -191,7 +210,10 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
               开始
             </Button>
             <Switch
-              style={{ marginLeft: 235 }}
+              style={{ 
+                float: 'right',
+                opacity: 0.8,
+              }}
               checkedChildren='记住密码'
               unCheckedChildren='记住密码'
               defaultChecked={localStorage.getItem('isRemember') === 'yes'}
@@ -207,6 +229,13 @@ export function Content({ browserStatus, systemStatus }: ContentProps) {
           </Form.Item>
 
       </Form>
+
+      <section
+        ref={logsRef}
+        className='content-logs'
+      >
+        {logs}
+      </section>
 
     </div>
   )
