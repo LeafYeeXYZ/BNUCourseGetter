@@ -8,8 +8,8 @@ import (
 
 // 蹲课模式主函数
 func (a *App) WatchCourse(speed int, studentID string, password string, courseID string, classID string) error {
-  // 发送事件
-	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课 - " + fmt.Sprint(speed) + " - " + courseID + " - " + classID)
+  
+	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课" + " - " + courseID + " - " + classID)
 
 	// 安装浏览器
 	err := playwright.Install()
@@ -18,16 +18,19 @@ func (a *App) WatchCourse(speed int, studentID string, password string, courseID
 	// 创建 Playwright 实例
 	pw, err := playwright.Run()
 	if err != nil { return err }
+	defer pw.Stop()
 
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(false),
 	})
 	if err != nil { return err }
+	defer browser.Close()
 
 	// 创建页面实例
 	page, err := browser.NewPage()
 	if err != nil { return err }
+	runtime.EventsEmit(a.ctx, "currentStatus", "已打开浏览器")
 
 	// 跳转到登录页面
 	_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
@@ -44,9 +47,9 @@ func (a *App) WatchCourse(speed int, studentID string, password string, courseID
 	// 点击登录按钮
 	err = page.Locator("#index_login_btn").Click()
 	if err != nil { return err }
+	runtime.EventsEmit(a.ctx, "currentStatus", "已登录")
 
 	// 如果有, 点击 "继续访问原地址"
-	runtime.EventsEmit(a.ctx, "currentStatus", "已尝试登录, 正在判断是否需要点击\"继续访问原地址\"")
 	ele := page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
 	if exists, _ := ele.IsVisible(); exists {
 		err = ele.Click()
@@ -63,8 +66,8 @@ func (a *App) WatchCourse(speed int, studentID string, password string, courseID
 		Name: &frameName,
 	})
 	if iframe == nil { return fmt.Errorf("找不到 iframe") }
-
 	runtime.EventsEmit(a.ctx, "currentStatus", "进入选课界面")
+
 	// 点击 "按开课计划抢课"
 	err = iframe.Locator("#title1785").Click()
 	if err != nil { return err }
@@ -84,18 +87,5 @@ func (a *App) WatchCourse(speed int, studentID string, password string, courseID
 
 
 	
-
-
-	// 关闭浏览器
-	err = browser.Close()
-	if err != nil { return err }
-
-	// 关闭 Playwright 实例
-	err = pw.Stop()
-	if err != nil { return err }
-
-	// 发送事件
-	runtime.EventsEmit(a.ctx, "currentStatus", "蹲课成功: " + courseID + " - " + classID) 
-
-	return nil
+	return fmt.Errorf("蹲课取消")
 }
