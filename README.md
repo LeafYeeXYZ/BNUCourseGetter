@@ -6,7 +6,7 @@
 ![](./README.png)
 
 ## 使用方法
-[点击下载](https://github.com/LeafYeeXYZ/BNUCourseGetter/releases)适用于你的设备的最新版本程序, 直接运行即可
+[点击下载](https://github.com/LeafYeeXYZ/BNUCourseGetter/releases)适用于你的设备的最新版本程序, 直接运行即可 (杀毒软件可能会误报为病毒, 如不放心可自行从源码编译)
 
 | 选项 | 说明 |
 | :---: | :---: |
