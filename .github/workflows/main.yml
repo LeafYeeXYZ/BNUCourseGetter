@@ -38,7 +38,7 @@ jobs:
           submodules: recursive
       
       - name: Setup Bun
-      - uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v1
         with:
           bun-version: 'latest'
 
