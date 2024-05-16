@@ -37,11 +37,10 @@ jobs:
         with:
           submodules: recursive
       
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3.0.0
+      - name: Setup Bun
+      - use: oven-sh/setup-bun@v1
         with:
-          version: 'latest'
-          package_json_file: 'frontend/package.json'
+          bun-version: 'latest'
 
       - name: Build wails
         uses: dAppServer/wails-build-action@v2.2
