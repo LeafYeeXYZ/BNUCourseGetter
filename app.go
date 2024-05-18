@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/playwright-community/playwright-go"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v2/pkg/options"
 )
 
 // App struct
@@ -19,6 +20,12 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+// 第二个进程的开启回调
+func (a *App) onSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
+	runtime.WindowUnminimise(a.ctx)
+	runtime.Show(a.ctx)
 }
 
 // 安装浏览器

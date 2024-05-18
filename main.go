@@ -45,6 +45,10 @@ func main() {
 		Debug: options.Debug{
 			OpenInspectorOnStartup: true,
 		},
+		SingleInstanceLock: &options.SingleInstanceLock{
+			UniqueId:               "90a3e88b-4da4-ae12-924e-9fd9c0bc6300",
+			OnSecondInstanceLaunch: app.onSecondInstanceLaunch,
+		},
 	})
 
 	if err != nil {
