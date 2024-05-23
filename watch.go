@@ -7,7 +7,7 @@ import (
 )
 
 // 蹲课模式主函数
-func (a *App) WatchCourse(speed int, studentID string, password string, courseID string, classID string) error {
+func (a *App) WatchCourse(speed int, studentID string, password string, courseID string, classID string, headless bool) error {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课" + " - " + courseID + " - " + classID)
 
@@ -22,7 +22,7 @@ func (a *App) WatchCourse(speed int, studentID string, password string, courseID
 
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
+		Headless: playwright.Bool(headless),
 	})
 	if err != nil { return err }
 	defer browser.Close()

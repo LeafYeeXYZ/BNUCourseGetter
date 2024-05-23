@@ -69,7 +69,10 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
     localStorage.getItem('isRemember') === 'no' && localStorage.setItem('password', '') // 清除密码
 
     // 发送开始抢课事件
-    Dialog('question', '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭浏览器\n是否继续?')
+    Dialog('question', localStorage.getItem('isHeadless') === 'no' ? 
+      '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭浏览器\n是否继续?' :
+      '即将开始抢课\n如需强制退出, 可直接关闭应用\n是否继续?'
+    )
     .then(res => {
       // 如果不点击 Yes, 则不执行
       if (res !== 'Yes') {
@@ -87,7 +90,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         EventsEmit('systemStatus', '抢课中')
       }
       // 抢课函数
-      funcs[value.mode](value.speed, value.studentID, value.password, value.courseID, value.classID)
+      funcs[value.mode](value.speed, value.studentID, value.password, value.courseID, value.classID, localStorage.getItem('isHeadless') !== 'no')
       .catch(err => {
         EventsEmit('currentStatus', err || '选课失败')
       })
@@ -223,6 +226,23 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
                 } else {
                   localStorage.setItem('isRemember', 'no')
                   localStorage.setItem('password', '')
+                }
+              }}
+            />
+            <Switch
+              style={{ 
+                float: 'right',
+                opacity: 0.8,
+                marginRight: 10,
+              }}
+              checkedChildren='显示浏览器'
+              unCheckedChildren='显示浏览器'
+              defaultChecked={localStorage.getItem('isHeadless') === 'yes'}
+              onChange={checked => {
+                if (checked) {
+                  localStorage.setItem('isHeadless', 'no')
+                } else {
+                  localStorage.setItem('isHeadless', 'yes')
                 }
               }}
             />

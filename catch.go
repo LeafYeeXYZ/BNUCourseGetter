@@ -8,7 +8,7 @@ import (
 )
 
 // 抢课模式主函数
-func (a *App) CatchCourse(speed int, studentID string, password string, courseID string, classID string) error {
+func (a *App) CatchCourse(speed int, studentID string, password string, courseID string, classID string, headless bool) error {
 
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始抢课" + " - " + courseID + " - " + classID)
 
@@ -23,7 +23,7 @@ func (a *App) CatchCourse(speed int, studentID string, password string, courseID
 
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
+		Headless: playwright.Bool(headless),
 	})
 	if err != nil { return err }
 	defer browser.Close()
@@ -85,7 +85,7 @@ func (a *App) CatchCourse(speed int, studentID string, password string, courseID
 		// 如果没到时间, 刷新
 		if disabled, errR := ele.IsDisabled(); disabled {
 			if errR != nil { return errR }
-			runtime.EventsEmit(a.ctx, "currentStatus", "未到选课时间, 刷新页面 (手动关闭浏览器即可停止)")
+			runtime.EventsEmit(a.ctx, "currentStatus", "未到选课时间, 刷新页面 (关闭浏览器或应用即可停止)")
 			errR = page.Locator("#JW130403").Click()
 			if errR != nil { return errR }
 			time.Sleep(time.Duration(speed) * time.Millisecond)
