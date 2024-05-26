@@ -59,6 +59,9 @@ func (a *App) Dialog(dialogType, message string) (string, error) {
 				Type: runtime.QuestionDialog,
 				Title: "提示",
 				Message: message,
+				Buttons: []string{"Yes", "No"},
+				DefaultButton: "Yes",
+				CancelButton: "No",
 			})
 		default:
 			return "", fmt.Errorf("未知的对话框类型")
