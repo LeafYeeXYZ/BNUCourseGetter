@@ -189,6 +189,11 @@ func (a *App) WatchCourseMaj(speed int, studentID string, password string, cours
 	if err != nil { return err }
 	runtime.EventsEmit(a.ctx, "currentStatus", "已登录")
 
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+
 	// 如果有, 点击 "继续访问原地址"
 	ele := page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
 	if exists, _ := ele.IsVisible(); exists {
