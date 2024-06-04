@@ -40,7 +40,7 @@
   }
 }
 
-@media screen and (min-height: 672px) {
+@media screen and (min-height: 725px) {
   #content {
     justify-content: center;
   }  

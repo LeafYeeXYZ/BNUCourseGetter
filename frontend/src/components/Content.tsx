@@ -5,7 +5,7 @@ import type { CheckboxOptionType } from 'antd'
 import type { SystemStatus, BrowserStatus, CurrentStatus } from '../App'
 import { useState, useRef, useEffect } from 'react'
 import { EventsEmit } from '../wailsjs/runtime/runtime'
-import { CatchCourse, WatchCourse } from '../wailsjs/go/main/App'
+import { CatchCoursePub, WatchCoursePub, WatchCourseMaj, CatchCourseMaj } from '../wailsjs/go/main/App'
 
 // 表单选项
 const option: {
@@ -21,12 +21,22 @@ const option: {
     { label: '每五秒', value: 5000 },
     { label: '每十秒', value: 10000 },
   ],
+  courseType: [ // 课程类别
+    { label: '选公共选修课', value: 'public' },
+    { label: '按开课计划选课', value: 'major', disabled: true },
+  ],
 }
 
 // 抢课函数
 const funcs = {
-  CatchCourse,
-  WatchCourse,
+  major: {
+    CatchCourse: CatchCourseMaj,
+    WatchCourse: WatchCourseMaj,
+  },
+  public: {
+    CatchCourse: CatchCoursePub,
+    WatchCourse: WatchCoursePub,
+  },
 }
 
 interface ContentProps {
@@ -35,14 +45,22 @@ interface ContentProps {
   currentStatus: CurrentStatus
 }
 
-type FormValues = { // 如果修改, 记得同步修改 Go 端
+type FormValues = {
   mode: 'CatchCourse' | 'WatchCourse' // 存在 localStorage
   speed: number // 存在 localStorage
+  courseType: 'public' | 'major' // 存在 localStorage
   studentID: string // 存在 localStorage
   password: string // 存在 localStorage (如果记住密码)
   courseID: string // 存在 localStorage
   classID: string // 存在 localStorage
   [key: string]: string | number
+}
+
+// 如果版本不一致, 则清除 localStorage
+const VERSION: number = 1
+if (Number(localStorage.getItem('version')) !== VERSION) {
+  localStorage.clear()
+  localStorage.setItem('version', String(VERSION))
 }
 
 export function Content({ browserStatus, systemStatus, currentStatus }: ContentProps) {
@@ -70,8 +88,8 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
 
     // 发送开始抢课事件
     Dialog('question', localStorage.getItem('isHeadless') === 'no' ? 
-      '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭浏览器\n是否继续?' :
-      '即将开始抢课\n如需强制退出, 可直接关闭应用\n是否继续?'
+      '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭小鸦抢课\n是否继续?' :
+      '即将开始抢课\n如需强制退出, 可直接关闭小鸦抢课\n是否继续?'
     )
     .then(res => {
       // 如果不点击 Yes, 则不执行
@@ -90,7 +108,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         EventsEmit('systemStatus', '抢课中')
       }
       // 抢课函数
-      funcs[value.mode](value.speed, value.studentID, value.password, value.courseID, value.classID, localStorage.getItem('isHeadless') !== 'no')
+      funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, value.courseID, value.classID, localStorage.getItem('isHeadless') !== 'no')
       .catch(err => {
         EventsEmit('currentStatus', err || '选课失败')
       })
@@ -126,6 +144,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         initialValues={{
           mode: localStorage.getItem('mode') || 'CatchCourse',
           speed: Number(localStorage.getItem('speed')) || 1000,
+          courseType: localStorage.getItem('courseType') || 'public',
           studentID: localStorage.getItem('studentID') || '',
           password: localStorage.getItem('password') || '',
           courseID: localStorage.getItem('courseID') || '',
@@ -158,6 +177,18 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
           >
             <Radio.Group
               options={option.speed}
+              optionType='button'
+              buttonStyle='solid'
+            />
+          </Form.Item>
+
+          <Form.Item
+            label='课程类别'
+            name='courseType'
+            rules={[{ required: true, message: '请选择课程类别' }]}
+          >
+            <Radio.Group
+              options={option.courseType}
               optionType='button'
               buttonStyle='solid'
             />
@@ -237,7 +268,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
               }}
               checkedChildren='显示浏览器'
               unCheckedChildren='显示浏览器'
-              defaultChecked={localStorage.getItem('isHeadless') === 'yes'}
+              defaultChecked={localStorage.getItem('isHeadless') === 'no'}
               onChange={checked => {
                 if (checked) {
                   localStorage.setItem('isHeadless', 'no')
