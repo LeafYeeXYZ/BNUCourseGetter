@@ -220,17 +220,17 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
             rules={[{ required: true, message: '请输入课程代码' }]}
           >
             <Input
-              placeholder='请输入课程代码'
+              placeholder='例如 GE610088771'
             />
           </Form.Item>
   
           <Form.Item
-            label='班级代码'
+            label='上课班号'
             name='classID'
             rules={[{ required: true, message: '请输入班级代码' }]}
           >
             <Input
-              placeholder='请输入班级代码'
+              placeholder='例如 01'
             />
           </Form.Item>
 

@@ -5,6 +5,7 @@ import (
 	"time"
 	"github.com/playwright-community/playwright-go"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"regexp"
 )
 
 // 蹲课模式主函数
@@ -172,6 +173,11 @@ func (a *App) WatchCourseMaj(speed int, studentID string, password string, cours
 	if err != nil { return err }
 	runtime.EventsEmit(a.ctx, "currentStatus", "已打开浏览器")
 
+	// 浏览器出现 confirm 时, 点击 "确定"
+  page.On("dialog", func(dialog playwright.Dialog) {
+    dialog.Accept()
+	})
+
 	// 跳转到登录页面
 	_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
 	if err != nil { return err }
@@ -200,18 +206,27 @@ func (a *App) WatchCourseMaj(speed int, studentID string, password string, cours
 		err = ele.Click()
 		if err != nil { return err }
 	}
-
+	
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+	
 	// 点击 "网上选课"
+	runtime.EventsEmit(a.ctx, "currentStatus", "进入选课界面")
 	err = page.Locator("li[data-code=\"JW1304\"]").Click()
 	if err != nil { return err }
 
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+
 	// 获取 iframe
-	frameName := "frmDesk"
 	iframe := page.Frame(playwright.PageFrameOptions{
-		Name: &frameName,
+		Name: playwright.String("frmDesk"),
 	})
 	if iframe == nil { return fmt.Errorf("找不到 iframe") }
-	runtime.EventsEmit(a.ctx, "currentStatus", "进入选课界面")
 
 	// 点击 "按开课计划抢课"
 	err = iframe.Locator("#title1785").Click()
@@ -224,16 +239,99 @@ func (a *App) WatchCourseMaj(speed int, studentID string, password string, cours
 
 	// "所有院系开设课程"
 	ele = iframe.Locator("#kkdw_range_all")
+	// 如果没到时间, 退出
 	if disabled, _ := ele.IsDisabled(); disabled {
-		return fmt.Errorf("当前时间不是有效的选课时间区段")
+		return fmt.Errorf("未到选课时间")
+	// 如果到时间, 点击元素
+	} else {
+		time.Sleep(time.Duration(speed) * time.Millisecond)
+		err = ele.Click()
+		if err != nil { return err }
 	}
 
+	// 取消勾选 "只显示有余量的课程"
+	ele = iframe.Locator("#xwxmkc")
+	err = ele.Uncheck()
+	if err != nil { return err }	
+
+	// 输入课程号
+	err = iframe.Locator("#kcmc").Fill(courseID)
+	if err != nil { return err }
+
+	// 点击 "检索"
+	runtime.EventsEmit(a.ctx, "currentStatus", "检索课程")
+	err = iframe.Locator("#btnQry").Click()
+	if err != nil { return err }
+
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+
+	// 获取子 iframe
+	frmReport := iframe.FrameLocator("#frmReport")
+
+	// 点击 "选择"
+	eleBtn := frmReport.Locator("#tr0_operation a")
+	count := 0
+	for {
+		if count > 10000 { return fmt.Errorf("网络超时") }
+		if exists, _ := eleBtn.IsVisible(); exists {
+			err = eleBtn.Click()
+			if err != nil { return err }
+			break
+		} else {
+			runtime.EventsEmit(a.ctx, "currentStatus", "等待检索课程结果...")
+			time.Sleep(time.Duration(speed) * time.Millisecond)
+			count += speed
+		}
+	}
+	
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+	time.Sleep(2 * time.Second)
+
+	// 获取子 iframe
+	iiframe := page.Frame(playwright.PageFrameOptions{
+		URL: regexp.MustCompile(`http://zyfw.bnu.edu.cn:80/student/report/wsxk.zx_promt.jsp/`),
+	})
+	iiiframe := iiframe.FrameLocator("#frmReport")
+
+	// 输入班号
+	ele = iiframe.Locator("#txt_skbjdm")
+	err = ele.Fill(classID)
+	if err != nil { return err }
+
+	// 等待加载
+	time.Sleep(time.Duration(speed) * time.Millisecond)
+
+	// 如果可选人数为零, 点击返回
+	ele = iiiframe.Locator("#tr0_kxrs")
+	text, err := ele.InnerText()
+	if err != nil { return err }
+	if text == "0" {
+		// 刷新页面
+		page.Reload()
+		runtime.EventsEmit(a.ctx, "currentStatus", "可选人数为零, 重试 (关闭小鸦抢课即可停止)")
+	}
+
+	// 勾选 radio
+	ele = iiiframe.Locator("#tr0_ischk input")
+	err = ele.Click()
+	if err != nil { return err }
+
+	// 点击 "确定"
+	ele = iiframe.Locator("#btnSubmit")
+	err = ele.Click()
+	if err != nil { return err }
 
 	// 等待加载
 	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 		State: playwright.LoadStateNetworkidle,
 	})
 	time.Sleep(2 * time.Second)
-	
-	return fmt.Errorf("蹲课取消")
+
+	return fmt.Errorf("蹲课完成, 请手动确认结果")
 }

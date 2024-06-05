@@ -180,6 +180,11 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 	if err != nil { return err }
 	runtime.EventsEmit(a.ctx, "currentStatus", "已打开浏览器")
 
+	// 浏览器出现 confirm 时, 点击 "确定"
+  page.On("dialog", func(dialog playwright.Dialog) {
+    dialog.Accept()
+	})
+
 	// 跳转到登录页面
 	_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
 	if err != nil { return err }
@@ -235,25 +240,86 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 		// "所有院系开设课程"
 		ele = iframe.Locator("#kkdw_range_all")
 		// 如果没到时间, 刷新
-		if disabled, errR := ele.IsDisabled(); disabled {
-			if errR != nil { return errR }
-			runtime.EventsEmit(a.ctx, "currentStatus", "未到选课时间, 刷新页面 (关闭浏览器或应用即可停止)")
-			errR = page.Locator("#JW130403").Click()
-			if errR != nil { return errR }
-			time.Sleep(time.Duration(speed) * time.Millisecond)
+		if disabled, _ := ele.IsDisabled(); disabled {
+			runtime.EventsEmit(a.ctx, "currentStatus", "未到选课时间, 刷新页面 (关闭小鸦抢课即可停止)")
+			page.Locator("#JW130403").Click()
+			page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+				State: playwright.LoadStateNetworkidle,
+			})
 			continue
 		// 如果到时间, 点击元素
 		} else {
-			errR = ele.Click()
-			if errR != nil { return errR }
+			time.Sleep(time.Duration(speed) * time.Millisecond)
+			if disabled, _ := ele.IsDisabled(); disabled {
+				continue
+			}
+			err = ele.Click()
+			if err != nil { return err }
 			break
 		}
 	}
 
 	// 输入课程号
+	err = iframe.Locator("#kcmc").Fill(courseID)
+	if err != nil { return err }
 
-	// 循环监控课程
-	/// TO BE IMPLEMENTED
+	// 点击 "检索"
+	runtime.EventsEmit(a.ctx, "currentStatus", "检索课程")
+	err = iframe.Locator("#btnQry").Click()
+	if err != nil { return err }
+
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+
+	// 获取子 iframe
+	iiiiframe := page.Frame(playwright.PageFrameOptions{
+		Name: playwright.String("frmReport"),
+	})
+
+	// 点击 "选择"
+	ele = iiiiframe.Locator("#tr0_operation a")
+	count := 0
+	for {
+		if count > 10000 { return fmt.Errorf("网络超时或可选人数为零") }
+		if exists, _ := ele.IsVisible(); exists {
+			err = ele.Click()
+			if err != nil { return err }
+			break
+		} else {
+			runtime.EventsEmit(a.ctx, "currentStatus", "等待检索课程结果...")
+			time.Sleep(time.Duration(speed) * time.Millisecond)
+			count += speed
+		}
+	}
+
+	// 等待加载
+	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateNetworkidle,
+	})
+
+	// 获取子 iframe
+	iiframe := page.Frames()[2]
+	iiiframe := iiframe.FrameLocator("#frmReport")
+
+	// 输入班号
+	ele = iiframe.Locator("#txt_skbjdm")
+	err = ele.Fill(classID)
+	if err != nil { return err }
+
+	// 等待加载
+	time.Sleep(time.Duration(speed) * time.Millisecond)
+
+	// 勾选 radio
+	ele = iiiframe.Locator("#tr0_ischk input")
+	err = ele.Click()
+	if err != nil { return err }
+
+	// 点击 "确定"
+	ele = iiframe.Locator("#btnSubmit")
+	err = ele.Click()
+	if err != nil { return err }
 
 	// 等待加载
 	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
@@ -261,5 +327,5 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 	})
 	time.Sleep(2 * time.Second)
 
-	return fmt.Errorf("抢课取消")
+	return fmt.Errorf("抢课完成, 请手动确认结果")
 }
