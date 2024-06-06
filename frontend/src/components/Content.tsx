@@ -5,7 +5,7 @@ import type { CheckboxOptionType } from 'antd'
 import type { SystemStatus, BrowserStatus, CurrentStatus } from '../App'
 import { useState, useRef, useEffect } from 'react'
 import { EventsEmit } from '../wailsjs/runtime/runtime'
-import { CatchCoursePub, WatchCoursePub, WatchCourseMaj, CatchCourseMaj } from '../wailsjs/go/main/App'
+import { CatchCoursePub, WatchCoursePub, WatchCourseMaj, CatchCourseMaj, WatchCoursePubSync, WatchCourseMajSync } from '../wailsjs/go/main/App'
 
 // 表单选项
 const option: {
@@ -13,7 +13,8 @@ const option: {
 } = {
   mode: [ // 抢课模式
     { label: '抢课', value: 'CatchCourse' },
-    { label: '蹲课', value: 'WatchCourse' },
+    { label: '多线程蹲课', value: 'WatchCourse' },
+    { label: '单线程蹲课', value: 'WatchCourseSync' },
   ],
   speed: [ // 刷新频率
     { label: '每半秒', value: 500 },
@@ -32,10 +33,12 @@ const funcs = {
   major: {
     CatchCourse: CatchCourseMaj,
     WatchCourse: WatchCourseMaj,
+    WatchCourseSync: WatchCourseMajSync,
   },
   public: {
     CatchCourse: CatchCoursePub,
     WatchCourse: WatchCoursePub,
+    WatchCourseSync: WatchCoursePubSync,
   },
 }
 
@@ -46,7 +49,7 @@ interface ContentProps {
 }
 
 type FormValues = {
-  mode: 'CatchCourse' | 'WatchCourse' // 存在 localStorage
+  mode: 'CatchCourse' | 'WatchCourse' | 'WatchCourseSync' // 存在 localStorage
   speed: number // 存在 localStorage
   courseType: 'public' | 'major' // 存在 localStorage
   studentID: string // 存在 localStorage
@@ -106,7 +109,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         return
       }
       // 如果课程数大于 1, 则警告
-      if (courseID.length > 1) {
+      if (courseID.length > 1 && value.mode !== 'WatchCourseSync') {
         const res = await Dialog('question', `教务系统最多同时开启三个页面\n您将开启 ${courseID.length} 个页面\n如果继续, 可能会影响您进入教务系统\n请您确认是否继续?`)
         if (res !== 'Yes') {
           setDisableForm(false)
@@ -119,17 +122,20 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         setDisableForm(false)
         return
       } else if (value.mode === 'WatchCourse') {
-        EventsEmit('systemStatus', '蹲课中')
+        EventsEmit('systemStatus', '多线程蹲课中')
       } else if (value.mode === 'CatchCourse') {
         EventsEmit('systemStatus', '抢课中')
+      } else if (value.mode === 'WatchCourseSync') {
+        EventsEmit('systemStatus', '单线程蹲课中')
       }
       // 抢课函数
       await funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
-      EventsEmit('systemStatus', '空闲')
-      setDisableForm(false)
     } catch (err) {
       EventsEmit('currentStatus', err || '选课失败, 未知错误')
-    } 
+    } finally {
+      EventsEmit('systemStatus', '空闲')
+      setDisableForm(false)
+    }
   }
 
   // 日志列表

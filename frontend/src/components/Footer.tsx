@@ -22,7 +22,7 @@ export function Footer({ browserStatus }: FooterProps) {
       <p
         className='footer-status'
       >
-        <span>小鸦抢课开源免费, 欢迎在 <Link href='https://github.com/LeafYeeXYZ/BNUCourseGetter'><span>Github</span></Link> 上关注和参与本项目!</span>
+        <span>小鸦抢课开源免费, 欢迎在 <Link href='https://github.com/LeafYeeXYZ/BNUCourseGetter'><span>Github</span></Link> 上关注/参与本项目和下载最新版本!</span>
       </p>
       
       <p

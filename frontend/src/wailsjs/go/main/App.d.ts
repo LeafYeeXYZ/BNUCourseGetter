@@ -11,4 +11,8 @@ export function InstallBrowser():Promise<void>;
 
 export function WatchCourseMaj(arg1:number,arg2:string,arg3:string,arg4:Array<string>,arg5:Array<string>,arg6:boolean):Promise<void>;
 
+export function WatchCourseMajSync(arg1:number,arg2:string,arg3:string,arg4:Array<string>,arg5:Array<string>,arg6:boolean):Promise<void>;
+
 export function WatchCoursePub(arg1:number,arg2:string,arg3:string,arg4:Array<string>,arg5:Array<string>,arg6:boolean):Promise<void>;
+
+export function WatchCoursePubSync(arg1:number,arg2:string,arg3:string,arg4:Array<string>,arg5:Array<string>,arg6:boolean):Promise<void>;

@@ -22,6 +22,14 @@ export function WatchCourseMaj(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['WatchCourseMaj'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
+export function WatchCourseMajSync(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['main']['App']['WatchCourseMajSync'](arg1, arg2, arg3, arg4, arg5, arg6);
+}
+
 export function WatchCoursePub(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['WatchCoursePub'](arg1, arg2, arg3, arg4, arg5, arg6);
+}
+
+export function WatchCoursePubSync(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['main']['App']['WatchCoursePubSync'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
