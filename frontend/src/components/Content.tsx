@@ -97,6 +97,14 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         setDisableForm(false)
         return
       }
+      // 检查课程数和班级数是否一致
+      const courseID: string[] = value.courseID.split(' ')
+      const classID: string[] = value.classID.split(' ')
+      if (courseID.length !== classID.length) {
+        Dialog('error', '课程数和班级数不一致')
+        setDisableForm(false)
+        return
+      }
       // 检查并设置系统状态
       if (systemStatus !== '空闲') {
         Dialog('error', `请等待当前 ${systemStatus} 状态结束`)
@@ -108,7 +116,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         EventsEmit('systemStatus', '抢课中')
       }
       // 抢课函数
-      funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, value.courseID, value.classID, localStorage.getItem('isHeadless') !== 'no')
+      funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
       .catch(err => {
         EventsEmit('currentStatus', err || '选课失败')
       })
@@ -220,7 +228,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
             rules={[{ required: true, message: '请输入课程代码' }]}
           >
             <Input
-              placeholder='例如 GE610088771'
+              placeholder='例如 GE610088771 (多门课以空格分隔)'
             />
           </Form.Item>
   
@@ -230,7 +238,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
             rules={[{ required: true, message: '请输入班级代码' }]}
           >
             <Input
-              placeholder='例如 01'
+              placeholder='例如 01 (多门课以空格分隔)'
             />
           </Form.Item>
 
