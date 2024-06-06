@@ -69,7 +69,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
   const [disableForm, setDisableForm] = useState<boolean>(false)
  
   // 表单提交回调
-  function handleSubmit(browserStatus: BrowserStatus, systemStatus: SystemStatus, value: FormValues) {
+  async function handleSubmit(browserStatus: BrowserStatus, systemStatus: SystemStatus, value: FormValues) {
     // 检查浏览器状态
     if (browserStatus.status === '安装中') {
       Dialog('warning', '请等待浏览器安装完成')
@@ -86,12 +86,12 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
     for (const key in value) { localStorage.setItem(key, String(value[key])) }
     localStorage.getItem('isRemember') === 'no' && localStorage.setItem('password', '') // 清除密码
 
-    // 发送开始抢课事件
-    Dialog('question', localStorage.getItem('isHeadless') === 'no' ? 
-      '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭小鸦抢课\n是否继续?' :
-      '即将开始抢课\n如需强制退出, 可直接关闭小鸦抢课\n是否继续?'
-    )
-    .then(res => {
+    try {
+      // 发送开始抢课事件
+      const res = await Dialog('question', localStorage.getItem('isHeadless') === 'no' ? 
+        '即将开始抢课\n过程中请勿手动操作浏览器\n如需强制退出, 可直接关闭小鸦抢课\n是否继续?' :
+        '即将开始抢课\n如需强制退出, 可直接关闭小鸦抢课\n是否继续?'
+      )
       // 如果不点击 Yes, 则不执行
       if (res !== 'Yes') {
         setDisableForm(false)
@@ -105,6 +105,14 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         setDisableForm(false)
         return
       }
+      // 如果课程数大于 1, 则警告
+      if (courseID.length > 1) {
+        const res = await Dialog('question', `教务系统最多同时开启三个页面\n您将开启 ${courseID.length} 个页面\n如果继续, 可能会影响您进入教务系统\n请您确认是否继续?`)
+        if (res !== 'Yes') {
+          setDisableForm(false)
+          return
+        }
+      }
       // 检查并设置系统状态
       if (systemStatus !== '空闲') {
         Dialog('error', `请等待当前 ${systemStatus} 状态结束`)
@@ -116,15 +124,12 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         EventsEmit('systemStatus', '抢课中')
       }
       // 抢课函数
-      funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
-      .catch(err => {
-        EventsEmit('currentStatus', err || '选课失败')
-      })
-      .finally(() => {
-        EventsEmit('systemStatus', '空闲')
-        setDisableForm(false)
-      })
-    })
+      await funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
+      EventsEmit('systemStatus', '空闲')
+      setDisableForm(false)
+    } catch (err) {
+      EventsEmit('currentStatus', err || '选课失败, 未知错误')
+    } 
   }
 
   // 日志列表
@@ -163,7 +168,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
           maxWidth: 600,
           paddingRight: 13,
         }}
-        onFinish={value => handleSubmit(browserStatus, systemStatus, value)}
+        onFinish={async value => await handleSubmit(browserStatus, systemStatus, value)}
       >
           
           <Form.Item
