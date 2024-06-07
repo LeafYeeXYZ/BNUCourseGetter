@@ -110,7 +110,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
       }
       // 如果课程数大于 1, 则警告
       if (courseID.length > 1 && value.mode !== 'WatchCourseSync') {
-        const res = await Dialog('question', `教务系统最多同时开启三个页面\n您将开启 ${courseID.length} 个页面\n如果继续, 可能会影响您进入教务系统\n请您确认是否继续?`)
+        const res = await Dialog('question', `教务系统可能会限制同时开启页面数\n即将开启 ${courseID.length} 个页面同时选课\n如果继续, 可能会影响您其他设备进入教务系统\n请您确认是否继续?`)
         if (res !== 'Yes') {
           setDisableForm(false)
           return
