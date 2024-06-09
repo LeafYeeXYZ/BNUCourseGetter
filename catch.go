@@ -95,7 +95,7 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 进入选课界面", courseID))
 
 			// 点击 "抢公共选修课"
-			ele = iframe.Locator("#title1785")
+			ele = iframe.Locator("#title1803")
 			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
