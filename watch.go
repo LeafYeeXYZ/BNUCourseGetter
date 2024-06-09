@@ -12,9 +12,12 @@ import (
 func (a *App) WatchCoursePub(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
+
+	// 错误
+	var err error
 	
 	// 安装浏览器
-	err := playwright.Install()
+	err = playwright.Install()
 	if err != nil { return err }
 
 	// 创建 Playwright 实例
@@ -35,6 +38,10 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 	// 为每个课程创建一个协程
 	for i := 0; i < len(courseID); i++ {
 		go func(speed int, studentID string, password string, courseID string, classID string) {
+			// 当前元素
+			var ele playwright.Locator
+			// 错误
+			var err error
 
 			// 创建页面实例
 			page, err := browser.NewPage()
@@ -51,15 +58,18 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 			if err != nil { errCh <- err; return }
 
 			// 输入学号
-			err = page.Locator("#un").Fill(studentID)
+			ele = page.Locator("#un")
+		  err = ele.Fill(studentID)
 			if err != nil { errCh <- err; return }
 
 			// 输入密码
-			err = page.Locator("#pd").Fill(password)
+			ele = page.Locator("#pd")
+			err = ele.Fill(password)
 			if err != nil { errCh <- err; return }
 
 			// 点击登录按钮
-			err = page.Locator("#index_login_btn").Click()
+			ele = page.Locator("#index_login_btn")
+			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
 			// 等待加载
@@ -68,14 +78,15 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 			})
 
 			// 如果有, 点击 "继续访问原地址"
-			ele := page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
+			ele = page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
 			if exists, _ := ele.IsVisible(); exists {
 				err = ele.Click()
 				if err != nil { errCh <- err; return }
 			}
 
 			// 点击 "网上选课"
-			err = page.Locator("li[data-code=\"JW1304\"]").Click()
+			ele = page.Locator("li[data-code=\"JW1304\"]")
+			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
 			// 获取 iframe
@@ -85,7 +96,8 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 进入选课界面", courseID))
 
 			// 点击 "抢公共选修课"
-			err = iframe.Locator("#title1803").Click()
+			ele = iframe.Locator("#title1803")
+			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
 			// 等待加载
@@ -94,9 +106,9 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 			})
 
 			// 课程号输入框
-			ele = iframe.Locator("#kcmc")
-			time.Sleep(time.Duration(speed) * time.Millisecond)
 			// 是否是选课时间
+			time.Sleep(time.Duration(speed) * time.Millisecond)
+			ele = iframe.Locator("#kcmc")
 			if disabled, _ := ele.IsDisabled(); disabled {
 				errCh <- fmt.Errorf("当前时间不是有效的选课时间区段")
 				return
@@ -107,11 +119,13 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 			if err != nil { errCh <- err; return }
 
 			// 输入班号
-			err = iframe.Locator("#t_skbh").Fill(classID)
+			ele = iframe.Locator("#t_skbh")
+			err = ele.Fill(classID)
 			if err != nil { errCh <- err; return }
 
 			// 点击 "检索"
-			err = iframe.Locator("#btnQry").Click()
+			ele = iframe.Locator("#btnQry")
+			err = ele.Click()
 			if err != nil { errCh <- err; return }
 			
 			// 等待加载
@@ -124,8 +138,8 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 
 			// 点击 "选择"
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("检索课程 %s", courseID))
-			ele = iiframe.Locator("#tr0_xz a")
 			for {
+				ele = iiframe.Locator("#tr0_xz a")
 				if exists, _ := ele.IsVisible(); exists {
 					err = ele.Click()
 					if err != nil { errCh <- err; return }
@@ -134,7 +148,8 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("未找到课程 %s, 重新检索 (关闭小鸦抢课即可停止)", courseID))
 					time.Sleep(time.Duration(speed) * time.Millisecond)
 					// 点击 "检索"
-					err = iframe.Locator("#btnQry").Click()
+					ele = iframe.Locator("#btnQry")
+					err = ele.Click()
 					if err != nil { errCh <- err; return }
 					// 等待加载
 					page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
@@ -177,9 +192,14 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 func (a *App) WatchCoursePubSync(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
+
+	// 当前元素
+	var ele playwright.Locator
+	// 错误
+	var err error
 	
 	// 安装浏览器
-	err := playwright.Install()
+	err = playwright.Install()
 	if err != nil { return err }
 
 	// 创建 Playwright 实例
@@ -209,15 +229,18 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	if err != nil { return err }
 
 	// 输入学号
-	err = page.Locator("#un").Fill(studentID)
+	ele = page.Locator("#un")
+	err = ele.Fill(studentID)
 	if err != nil { return err }
 
 	// 输入密码
-	err = page.Locator("#pd").Fill(password)
+	ele = page.Locator("#pd")
+	err = ele.Fill(password)
 	if err != nil { return err }
 
 	// 点击登录按钮
-	err = page.Locator("#index_login_btn").Click()
+	ele = page.Locator("#index_login_btn")
+	err = ele.Click()
 	if err != nil { return err }
 
 	// 等待加载
@@ -226,14 +249,15 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	})
 
 	// 如果有, 点击 "继续访问原地址"
-	ele := page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
+	ele = page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
 	if exists, _ := ele.IsVisible(); exists {
 		err = ele.Click()
 		if err != nil { return err }
 	}
 
 	// 点击 "网上选课"
-	err = page.Locator("li[data-code=\"JW1304\"]").Click()
+	ele = page.Locator("li[data-code=\"JW1304\"]")
+	err = ele.Click()
 	if err != nil { return err }
 
 	// 获取 iframe
@@ -243,7 +267,8 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 等进入选课界面", courseID[0]))
 
 	// 点击 "抢公共选修课"
-	err = iframe.Locator("#title1803").Click()
+	ele = iframe.Locator("#title1803")
+	err = ele.Click()
 	if err != nil { return err }
 
 	// 等待加载
@@ -251,9 +276,9 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 		State: playwright.LoadStateNetworkidle,
 	})
 
+	time.Sleep(time.Duration(speed) * time.Millisecond)
 	// 课程号输入框
 	ele = iframe.Locator("#kcmc")
-	time.Sleep(time.Duration(speed) * time.Millisecond)
 	// 是否是选课时间
 	if disabled, _ := ele.IsDisabled(); disabled {
 		return fmt.Errorf("当前时间不是有效的选课时间区段")
@@ -268,15 +293,18 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 		})
 
 		// 输入课程号
-		err = iframe.Locator("#kcmc").Fill(courseID[index])
+		ele = iframe.Locator("#kcmc")
+		err = ele.Fill(courseID[index])
 		if err != nil { return err }
 
 		// 输入班号
-		err = iframe.Locator("#t_skbh").Fill(classID[index])
+		ele = iframe.Locator("#t_skbh")
+		err = ele.Fill(classID[index])
 		if err != nil { return err }
 
 		// 点击 "检索"
-		err = iframe.Locator("#btnQry").Click()
+		ele = iframe.Locator("#btnQry")
+		err = ele.Click()
 		if err != nil { return err }
 		
 		// 等待加载
