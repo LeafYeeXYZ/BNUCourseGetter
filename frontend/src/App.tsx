@@ -52,7 +52,10 @@ function App() {
   // 用于标识当前输出的 state 和 event, 仅使用事件修改状态!!!
   const [currentStatus, setCurrentStatus] = useState<CurrentStatus>([<span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;开始加载</span>])
   useEffect(() => {
-    EventsOn('currentStatus', (status: string) => setCurrentStatus(prev => [...prev, <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>]))
+    EventsOn('currentStatus', (status: string) => {
+      // 最多同时保留 1000 条记录
+      setCurrentStatus(prev => [...prev.slice(-999), <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>])
+    })
     EventsEmit('currentStatus', '系统已启动')
     return () => EventsOff('currentStatus')
   }, [])

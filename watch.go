@@ -6,30 +6,75 @@ import (
 	"github.com/playwright-community/playwright-go"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"regexp"
+	"sync"
 )
 
-// 蹲课模式主函数
+// 多线程蹲课的刷新时间 (单线程为此值的 2 倍)
+var refreshTime = 150 * time.Second
+
+// 蹲课模式对外接口
 func (a *App) WatchCoursePub(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+	var wg sync.WaitGroup
+	var ch = make(chan error, 1)
+	for {
+		wg.Add(1)
+		go a.watchCoursePubCore(speed, studentID, password, courseID, classID, headless, &wg, ch)
+		wg.Wait()
+		select {
+			case err := <-ch:
+				if err != nil {
+					return err
+				}
+			default:
+				continue
+		}
+	}
+}
+
+// 单线程蹲课模式对外接口
+func (a *App) WatchCoursePubSync(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+	var wg sync.WaitGroup
+	var ch = make(chan error, 1)
+	for {
+		wg.Add(1)
+		go a.watchCoursePubSyncCore(speed, studentID, password, courseID, classID, headless, &wg, ch)
+		wg.Wait()
+		select {
+			case err := <-ch:
+				if err != nil {
+					return err
+				}
+			default:
+				continue
+		}
+	}
+}
+
+// 蹲课模式主函数
+func (a *App) watchCoursePubCore(speed int, studentID string, password string, courseID []string, classID []string, headless bool, wg *sync.WaitGroup, ch chan error) {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
+
+	// 最后
+	defer wg.Done()
 
 	// 错误
 	var err error
 	
 	// 安装浏览器
 	err = playwright.Install()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 创建 Playwright 实例
 	pw, err := playwright.Run()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 	defer pw.Stop()
 
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(headless),
 	})
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 	defer browser.Close()
 
 	// 捕获错误的管道
@@ -173,25 +218,40 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 
 	// 捕获错误
 	count := 0
+	start := time.Now()
+	LOOP:
 	for {
-		data := <-errCh
-		if data != nil {
-			return data
-		} else {
-			count++
-			if count >= len(courseID) {
-				break
-			}
+		select {
+			case data := <-errCh:
+				if data != nil {
+					ch <- data
+					return
+				} else {
+					count++
+					if count >= len(courseID) {
+						break LOOP
+					}
+				}
+			default:
+				if time.Since(start) > refreshTime {
+					runtime.EventsEmit(a.ctx, "currentStatus", "为降低内存占用, 重启浏览器...")
+					return
+				}
+
 		}
 	}
 
   // 成功	
-	return fmt.Errorf("蹲课完成, 请手动确认结果")
+	ch <- fmt.Errorf("全部课程蹲课完成, 请手动确认结果")
 }
 
-func (a *App) WatchCoursePubSync(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+// 单线程蹲课模式主函数
+func (a *App) watchCoursePubSyncCore(speed int, studentID string, password string, courseID []string, classID []string, headless bool, wg *sync.WaitGroup, ch chan error) {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
+
+	// 最后
+	defer wg.Done()
 
 	// 当前元素
 	var ele playwright.Locator
@@ -200,23 +260,23 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	
 	// 安装浏览器
 	err = playwright.Install()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 创建 Playwright 实例
 	pw, err := playwright.Run()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 	defer pw.Stop()
 
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(headless),
 	})
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 	defer browser.Close()
 
 	// 创建页面实例
 	page, err := browser.NewPage()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 	runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("为课程 %s 等创建新页面", courseID[0]))
 
 	// 浏览器出现 confirm 时, 点击 "确定"
@@ -226,22 +286,22 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 
 	// 跳转到登录页面
 	_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 输入学号
 	ele = page.Locator("#un")
 	err = ele.Fill(studentID)
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 输入密码
 	ele = page.Locator("#pd")
 	err = ele.Fill(password)
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 点击登录按钮
 	ele = page.Locator("#index_login_btn")
 	err = ele.Click()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 等待加载
 	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
@@ -252,13 +312,13 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	ele = page.Locator("body > div > div.mid_container > div > div > div > div.select_login_box > div:nth-child(6) > a")
 	if exists, _ := ele.IsVisible(); exists {
 		err = ele.Click()
-		if err != nil { return err }
+		if err != nil { ch <- err; return }
 	}
 
 	// 点击 "网上选课"
 	ele = page.Locator("li[data-code=\"JW1304\"]")
 	err = ele.Click()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 获取 iframe
 	iframe := page.Frame(playwright.PageFrameOptions{
@@ -269,7 +329,7 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	// 点击 "抢公共选修课"
 	ele = iframe.Locator("#title1803")
 	err = ele.Click()
-	if err != nil { return err }
+	if err != nil { ch <- err; return }
 
 	// 等待加载
 	iframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
@@ -281,10 +341,12 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	ele = iframe.Locator("#kcmc")
 	// 是否是选课时间
 	if disabled, _ := ele.IsDisabled(); disabled {
-		return fmt.Errorf("当前时间不是有效的选课时间区段")
+		ch <- fmt.Errorf("当前时间不是有效的选课时间区段")
+		return
 	}
 
 	index := 0
+	start := time.Now()
 	LOOP:
 	for {
 		// 等待加载
@@ -295,17 +357,17 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 		// 输入课程号
 		ele = iframe.Locator("#kcmc")
 		err = ele.Fill(courseID[index])
-		if err != nil { return err }
+		if err != nil { ch <- err; return }
 
 		// 输入班号
 		ele = iframe.Locator("#t_skbh")
 		err = ele.Fill(classID[index])
-		if err != nil { return err }
+		if err != nil { ch <- err; return }
 
 		// 点击 "检索"
 		ele = iframe.Locator("#btnQry")
 		err = ele.Click()
-		if err != nil { return err }
+		if err != nil { ch <- err; return }
 		
 		// 等待加载
 		page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
@@ -320,7 +382,7 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 		ele = iiframe.Locator("#tr0_xz a")
 		if exists, _ := ele.IsVisible(); exists {
 			err = ele.Click()
-			if err != nil { return err }
+			if err != nil { ch <- err; return }
 			break LOOP
 		} else {
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("未找到课程 %s, 重新检索 (关闭小鸦抢课即可停止)", courseID[index]))
@@ -330,7 +392,11 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 				index++
 			} else {
 				index = 0
-			}			
+			}
+			if time.Since(start) > 2 * refreshTime {
+				runtime.EventsEmit(a.ctx, "currentStatus", "为降低内存占用, 重启浏览器...")
+				return
+			}
 			continue LOOP
 		}
 	}
@@ -342,7 +408,7 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 	time.Sleep(2 * time.Second)
 
   // 成功	
-	return fmt.Errorf("单线程蹲课结束, 请手动确认结果")
+	ch <- fmt.Errorf("某个课程蹲课成功, 请手动确认结果")
 }
 
 func (a *App) WatchCourseMaj(speed int, studentID string, password string, tpcourseID []string, tpclassID []string, headless bool) error {

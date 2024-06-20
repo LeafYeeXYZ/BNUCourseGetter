@@ -109,8 +109,8 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         return
       }
       // 如果课程数大于 1, 则警告
-      if (courseID.length > 1 && value.mode !== 'WatchCourseSync') {
-        const res = await Dialog('question', `教务系统可能会限制同时开启页面数\n即将开启 ${courseID.length} 个页面同时选课\n如果继续, 可能会影响您其他设备进入教务系统\n请您确认是否继续?`)
+      if (courseID.length > 1 && value.mode !== 'WatchCourseSync' && value.mode !== 'WatchCourse') {
+        const res = await Dialog('question', `即将开启 ${courseID.length} 个页面同时抢课\n抢课模式下, 每个页面占用内存会逐渐增加\n所以建议不要提前太多时间开始抢课\n请您确认是否继续?`)
         if (res !== 'Yes') {
           setDisableForm(false)
           return
