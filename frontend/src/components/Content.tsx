@@ -129,7 +129,25 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
         EventsEmit('systemStatus', '单线程蹲课中')
       }
       // 抢课函数
-      await funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
+      if ((value.mode === 'WatchCourseSync' || value.mode === 'WatchCourse') && localStorage.getItem('isProtect') === 'yes') {
+        // 蹲课保护: Promise 被拒绝时, 会自动重试
+        const autoRetry = async (func: typeof WatchCoursePub | typeof WatchCoursePubSync, speed: number, studentID: string, password: string, courseID: string[], classID: string[], isHeadless: boolean) => {
+          // eslint-disable-next-line no-constant-condition
+          while (true) {
+            try {
+              await func(speed, studentID, password, courseID, classID, isHeadless)
+              break
+            } catch (err) {
+              EventsEmit('currentStatus', `检测到发生错误: ${err}`)
+              EventsEmit('currentStatus', '蹲课保护已启动, 重试 (如需退出, 直接关闭小鸦抢课即可)')
+            }
+          }
+        }
+        await autoRetry(funcs[value.courseType][value.mode], value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
+      } else {
+        // 关闭蹲课保护或抢课
+        await funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
+      }
     } catch (err) {
       EventsEmit('currentStatus', err || '选课失败, 未知错误')
     } finally {
@@ -293,6 +311,23 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
                   localStorage.setItem('isHeadless', 'no')
                 } else {
                   localStorage.setItem('isHeadless', 'yes')
+                }
+              }}
+            />
+            <Switch
+              style={{ 
+                float: 'right',
+                opacity: 0.8,
+                marginRight: 10,
+              }}
+              checkedChildren='蹲课保护'
+              unCheckedChildren='蹲课保护'
+              defaultChecked={localStorage.getItem('isProtect') === 'yes'}
+              onChange={checked => {
+                if (checked) {
+                  localStorage.setItem('isProtect', 'yes')
+                } else {
+                  localStorage.setItem('isProtect', 'no')
                 }
               }}
             />

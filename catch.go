@@ -196,7 +196,8 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 	}
 
 	// 成功
-	return fmt.Errorf("抢课完成, 请手动确认结果")
+	runtime.EventsEmit(a.ctx, "currentStatus", "抢课完成, 请手动确认结果")
+	return nil
 }
 
 func (a *App) CatchCourseMaj(speed int, studentID string, password string, tpcourseID []string, tpclassID []string, headless bool) error {

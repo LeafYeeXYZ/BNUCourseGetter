@@ -24,6 +24,8 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 			case err := <-ch:
 				if err != nil {
 					return err
+				} else {
+					return nil
 				}
 			default:
 				continue
@@ -43,6 +45,8 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 			case err := <-ch:
 				if err != nil {
 					return err
+				} else {
+					return nil
 				}
 			default:
 				continue
@@ -185,13 +189,18 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("检索课程 %s", courseID))
 			for {
 				ele = iiframe.Locator("#tr0_xz a")
+				// 延时
+				time.Sleep(time.Duration(speed) * time.Millisecond)
+				// 等待加载
+				iframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
 				if exists, _ := ele.IsVisible(); exists {
 					err = ele.Click()
 					if err != nil { errCh <- err; return }
 					break
 				} else {
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("未找到课程 %s, 重新检索 (关闭小鸦抢课即可停止)", courseID))
-					time.Sleep(time.Duration(speed) * time.Millisecond)
 					// 点击 "检索"
 					ele = iframe.Locator("#btnQry")
 					err = ele.Click()
@@ -242,7 +251,8 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 	}
 
   // 成功	
-	ch <- fmt.Errorf("全部课程蹲课完成, 请手动确认结果")
+	runtime.EventsEmit(a.ctx, "currentStatus", "全部课程蹲课完成, 请手动确认结果")
+	ch <- nil
 }
 
 // 单线程蹲课模式主函数
@@ -380,13 +390,18 @@ func (a *App) watchCoursePubSyncCore(speed int, studentID string, password strin
 		// 点击 "选择"
 		runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("检索课程 %s", courseID[index]))
 		ele = iiframe.Locator("#tr0_xz a")
+		// 延时
+		time.Sleep(time.Duration(speed) * time.Millisecond)
+		// 等待加载
+		iframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
+			State: playwright.LoadStateNetworkidle,
+		})
 		if exists, _ := ele.IsVisible(); exists {
 			err = ele.Click()
 			if err != nil { ch <- err; return }
 			break LOOP
 		} else {
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("未找到课程 %s, 重新检索 (关闭小鸦抢课即可停止)", courseID[index]))
-			time.Sleep(time.Duration(speed) * time.Millisecond)
 			// 更新索引
 			if index < len(courseID) - 1 {
 				index++
@@ -408,7 +423,8 @@ func (a *App) watchCoursePubSyncCore(speed int, studentID string, password strin
 	time.Sleep(2 * time.Second)
 
   // 成功	
-	ch <- fmt.Errorf("某个课程蹲课成功, 请手动确认结果")
+	runtime.EventsEmit(a.ctx, "currentStatus", "某个课程蹲课完成, 请手动确认结果")
+	ch <- nil
 }
 
 func (a *App) WatchCourseMaj(speed int, studentID string, password string, tpcourseID []string, tpclassID []string, headless bool) error {
