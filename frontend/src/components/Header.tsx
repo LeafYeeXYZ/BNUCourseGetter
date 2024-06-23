@@ -41,7 +41,7 @@ export function Header({ systemStatus }: HeaderProps ) {
       <p
         className='header-title'
       >
-        小鸦抢课 v1.4.0 - {systemStatus}
+        小鸦抢课 v1.5.0 - {systemStatus}
       </p>
 
       <button

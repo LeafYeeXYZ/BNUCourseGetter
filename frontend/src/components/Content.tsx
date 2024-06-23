@@ -18,13 +18,13 @@ const option: {
   ],
   speed: [ // 刷新频率
     { label: '每半秒', value: 500 },
-    { label: '每秒', value: 1000 },
+    { label: '每秒 (推荐)', value: 1000 },
     { label: '每五秒', value: 5000 },
     { label: '每十秒', value: 10000 },
   ],
   courseType: [ // 课程类别
     { label: '选公共选修课', value: 'public' },
-    { label: '按开课计划选课', value: 'major', disabled: true },
+    { label: '按开课计划选课 (测试)', value: 'major' },
   ],
 }
 
@@ -131,7 +131,7 @@ export function Content({ browserStatus, systemStatus, currentStatus }: ContentP
       // 抢课函数
       if ((value.mode === 'WatchCourseSync' || value.mode === 'WatchCourse') && localStorage.getItem('isProtect') === 'yes') {
         // 蹲课保护: Promise 被拒绝时, 会自动重试
-        const autoRetry = async (func: typeof WatchCoursePub | typeof WatchCoursePubSync, speed: number, studentID: string, password: string, courseID: string[], classID: string[], isHeadless: boolean) => {
+        const autoRetry = async (func: typeof WatchCoursePub | typeof WatchCoursePubSync | typeof WatchCourseMaj | typeof WatchCourseMajSync, speed: number, studentID: string, password: string, courseID: string[], classID: string[], isHeadless: boolean) => {
           // eslint-disable-next-line no-constant-condition
           while (true) {
             try {
