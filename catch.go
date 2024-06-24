@@ -377,6 +377,11 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			err = ele.Fill(classID)
 			if err != nil { errCh <- err; return }
 
+			// 点击 "检索"
+			ele = iiframe.Locator("#btnQry")
+			err = ele.Click()
+			if err != nil { errCh <- err; return }
+
 			// 等待加载
 			iiframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
 				State: playwright.LoadStateNetworkidle,

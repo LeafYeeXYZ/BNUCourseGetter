@@ -596,6 +596,11 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 	err = ele.Fill(classID)
 	if err != nil { ch <- err; return }
 
+	// 点击 "检索"
+	ele = iiframe.Locator("#btnQry")
+	err = ele.Click()
+	if err != nil { ch <- err; return }
+
 	// 等待加载
 	iiframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
 		State: playwright.LoadStateNetworkidle,
