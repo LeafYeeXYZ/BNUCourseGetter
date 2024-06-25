@@ -7,7 +7,6 @@
   width: 100dvw;
   overflow: hidden;
   background-color: var(--back);
-  border-radius: 10px!important;
 
   --header-height: 40px;
   --footer-height: 30px;

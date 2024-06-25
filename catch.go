@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+
 	"github.com/playwright-community/playwright-go"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -398,6 +399,12 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 					return
 				}
 				if exists, _ := ele.IsVisible(); exists {
+					// 检查是否可选人数为 0
+					if text, _ := iiiframe.Locator("#tr0_kxrs").InnerText(); text == "0" {
+						runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID))
+						errCh <- fmt.Errorf("课程 %s 可选人数为零", courseID)
+						return
+					}
 					err = ele.Click()
 					if err != nil { errCh <- err; return }
 					break

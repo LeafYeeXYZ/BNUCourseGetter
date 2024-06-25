@@ -616,6 +616,11 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 			return
 		}
 		if exists, _ := ele.IsVisible(); exists {
+			// 检查可选人数是否为 0
+			if text, _ := iiiframe.Locator("#tr0_kxrs").InnerText(); text == "0" {
+				ch <- nil
+				return
+			}
 			err = ele.Click()
 			if err != nil { ch <- err; return }
 			break
