@@ -51,3 +51,13 @@
 由于没有选择直接发送请求, 而是以浏览器自动化的方式实现, 所以使用风险较小, 但是效率也会低一些
 
 二进制文件仅在 `Windows` 下测试过, 其他平台如果有问题请提交 `Issue` 或 `Pull Request`
+
+#### MacOS 使用方法
+由于 `Github Action` 构建时出错, 所以请自行编译, 流程如下:
+
+1. 安装 `Go`、`Node.js`
+2. 执行 `npm install -g bun` 安装 `bun`
+3. 执行 `go install github.com/wailsapp/wails/cmd/wails@latest` 安装 `Wails`
+4. 克隆本项目
+5. 在项目目录下执行 `wails build` 编译
+6. 在 `build/bin` 目录下找到编译好的二进制文件, 执行即可
