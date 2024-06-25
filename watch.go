@@ -608,7 +608,7 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 	time.Sleep(time.Duration(speed) * time.Millisecond)
 
 	// 勾选 radio
-	ele = iiiframe.Locator("#tr0_ischk input")
+	ele = iiiframe.Locator("#tr0_kxrs")
 	count = 0
 	for {
 		if count > 2000 { 
@@ -617,13 +617,16 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 		}
 		if exists, _ := ele.IsVisible(); exists {
 			// 检查可选人数是否为 0
-			if text, _ := iiiframe.Locator("#tr0_kxrs").InnerText(); text == "0" {
+			if text, _ := ele.TextContent(); text == "0" {
 				ch <- nil
 				return
+			} else {
+				// 勾选
+				ele = iiiframe.Locator("#tr0_ischk input")
+				err = ele.Check()
+				if err != nil { ch <- err; return }
+				break
 			}
-			err = ele.Click()
-			if err != nil { ch <- err; return }
-			break
 		} else {
 			time.Sleep(time.Duration(speed) * time.Millisecond)
 			count += speed

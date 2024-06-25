@@ -389,8 +389,8 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			})
 			time.Sleep(time.Duration(speed) * time.Millisecond)
 
-			// 勾选 radio
-			ele = iiiframe.Locator("#tr0_ischk input")
+			// 可选人数
+			ele = iiiframe.Locator("#tr0_kxrs")
 			count = 0
 			for {
 				if count > 10000 { 
@@ -400,14 +400,17 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 				}
 				if exists, _ := ele.IsVisible(); exists {
 					// 检查是否可选人数为 0
-					if text, _ := iiiframe.Locator("#tr0_kxrs").InnerText(); text == "0" {
+					if text, _ := ele.InnerText(); text == "0" {
 						runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID))
 						errCh <- fmt.Errorf("课程 %s 可选人数为零", courseID)
 						return
+					} else {
+					  // 勾选
+						ele = iiiframe.Locator("#tr0_ischk input")
+						err = ele.Click()
+						if err != nil { errCh <- err; return }
+						break
 					}
-					err = ele.Click()
-					if err != nil { errCh <- err; return }
-					break
 				} else {
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("等待检索课程 %s 结果...", courseID))
 					time.Sleep(time.Duration(speed) * time.Millisecond)
