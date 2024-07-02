@@ -4,8 +4,6 @@ import {
   WindowToggleMaximise,
   Quit,
   WindowReload,
-  Hide,
-  Show,
   WindowSetAlwaysOnTop,
 } from '../wailsjs/runtime/runtime'
 import { Dialog } from '../wailsjs/go/main/App'
@@ -41,7 +39,7 @@ export function Header({ systemStatus }: HeaderProps ) {
       <p
         className='header-title'
       >
-        小鸦抢课 v1.5.3 - {systemStatus}
+        小鸦抢课 v1.5.4 - {systemStatus}
       </p>
 
       <button
@@ -63,9 +61,7 @@ export function Header({ systemStatus }: HeaderProps ) {
           Dialog('question', '确定要刷新窗口吗 (oﾟvﾟ)/')
           .then(res => {
             if (res === 'Yes') {
-              Hide()
               WindowReload()
-              Show()
             }
           })
         }}

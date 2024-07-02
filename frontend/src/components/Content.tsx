@@ -19,12 +19,12 @@ const option: {
   speed: [ // 刷新频率
     { label: '每半秒', value: 500 },
     { label: '每秒 (推荐)', value: 1000 },
+    { label: '每两秒', value: 2000 },
     { label: '每五秒', value: 5000 },
-    { label: '每十秒', value: 10000 },
   ],
   courseType: [ // 课程类别
     { label: '选公共选修课', value: 'public' },
-    { label: '按开课计划选课 (测试)', value: 'major' },
+    { label: '按开课计划选课', value: 'major' },
   ],
 }
 

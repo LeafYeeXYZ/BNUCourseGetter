@@ -1,3 +1,8 @@
+* {
+  /* 微软雅黑, 苹方 */
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+}
+
 #container {
   display: flex;
   flex-direction: column;
@@ -27,4 +32,5 @@
 body,
 html {
   background: transparent;
+  border-radius: 10px;
 }
