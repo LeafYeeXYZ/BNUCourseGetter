@@ -53,11 +53,22 @@ function App() {
   const [currentStatus, setCurrentStatus] = useState<CurrentStatus>([<span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;开始加载</span>])
   useEffect(() => {
     EventsOn('currentStatus', (status: string) => {
-      // 最多同时保留 1000 条记录
-      setCurrentStatus(prev => [...prev.slice(-999), <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>])
+      // 最多同时保留 500 条记录
+      setCurrentStatus(prev => [...prev.slice(-499), <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>])
     })
-    EventsEmit('currentStatus', '系统已启动')
+    EventsEmit('currentStatus', '系统已启动 (此处将展示日志)')
     return () => EventsOff('currentStatus')
+  }, [])
+
+  // 重要事件的 state 和 event, 仅使用事件修改状态!!!
+  const [importantStatus, setImportantStatus] = useState<CurrentStatus>([<span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;开始加载</span>])
+  useEffect(() => {
+    EventsOn('importantStatus', (status: string) => {
+      // 最多同时保留 100 条记录
+      setImportantStatus(prev => [...prev.slice(-99), <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>])
+    })
+    EventsEmit('importantStatus', '系统已启动 (此处将展示结果)')
+    return () => EventsOff('importantStatus')
   }, [])
 
   return (
@@ -73,6 +84,7 @@ function App() {
           browserStatus={browserStatus}
           systemStatus={systemStatus}
           currentStatus={currentStatus}
+          importantStatus={importantStatus}
         />
 
         <Footer 

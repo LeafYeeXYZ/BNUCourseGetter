@@ -214,6 +214,7 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 
 			// 等待加载
 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("成功选择课程 %s", courseID))
+			runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("成功选择课程 %s", courseID))
 			page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 				State: playwright.LoadStateNetworkidle,
 			})
@@ -417,6 +418,7 @@ func (a *App) watchCoursePubSyncCore(speed int, studentID string, password strin
 	}
 	// 等待加载
 	runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("成功选择课程 %s", courseID[index]))
+	runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("成功选择课程 %s", courseID[index]))
 	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 		State: playwright.LoadStateNetworkidle,
 	})
@@ -644,6 +646,7 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 
 	// 等待加载
 	runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("成功选择课程 %s", courseID))
+	runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("成功选择课程 %s", courseID))
 	page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 		State: playwright.LoadStateNetworkidle,
 	})

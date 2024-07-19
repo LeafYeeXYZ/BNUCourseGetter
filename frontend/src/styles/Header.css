@@ -1,7 +1,9 @@
 #header {
   display: grid;
   grid-template-columns: 
-    1fr 
+    5rem
+    2.2rem
+    1fr
     var(--header-height) 
     var(--header-height) 
     var(--header-height)
@@ -28,10 +30,47 @@
   }
 
   & .header-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     height: var(--header-height);
-    padding: 10px 15px;
+    padding-right: 0;
     line-height: calc(var(--header-height) - 20px);
     font-size: 0.85rem;
     font-weight: bold;
+  }
+  & .header-version {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: bold;
+    background-color: var(--back-light);
+    border-radius: 10px;
+    border: 1px solid var(--text);
+    opacity: 0.8;
+    margin: 10px 0;
+    transform: translateX(-5px);
+  }
+  & .header-status-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    padding: 10px 0;
+    & .header-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: bold;
+      background-color: var(--back-light);
+      border-radius: 10px;
+      border: 1px solid var(--text);
+      opacity: 0.8;
+      padding: 1px 5px;
+      transform: translateX(3px);
+    }
   }
 }
