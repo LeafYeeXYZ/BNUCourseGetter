@@ -20,22 +20,16 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'linux-amd64'
-            platform:  'linux/amd64'
-            os: 'ubuntu-latest'
-          - name: 'linux-arm64'
-            platform:  'linux/arm64'
-            os: 'ubuntu-latest'
           - name: 'windows-amd64'
             platform:  'windows/amd64'
             os: 'windows-latest'
           - name: 'windows-arm64'
             platform:  'windows/arm64'
             os: 'windows-latest'
-          - name: 'darwin-amd64'
+          - name: 'mac-amd64'
             platform:  'darwin/amd64'
             os: 'macos-latest'
-          - name: 'darwin-arm64'
+          - name: 'mac-arm64'
             platform:  'darwin/arm64'
             os: 'macos-latest'
 
