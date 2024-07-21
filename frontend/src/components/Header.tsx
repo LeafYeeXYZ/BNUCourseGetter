@@ -44,7 +44,7 @@ export function Header({ systemStatus }: HeaderProps ) {
       <p
         className='header-version'
       >
-        1.6.0
+        1.6.1
       </p>
       <p className='header-status-container'>
         <p

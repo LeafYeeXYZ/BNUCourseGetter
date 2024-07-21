@@ -1,4 +1,4 @@
-name: Wails build
+nam: Wails build
 
 on:
   push:
@@ -26,25 +26,44 @@ jobs:
           - name: 'windows-amd64'
             platform:  'windows/amd64'
             os: 'windows-latest'
+          - name: 'darwin-amd64'
+            platform:  'darwin/amd64'
+            os: 'macos-latest'
+          - name: 'darwin-arm64'
+            platform:  'darwin/arm64'
+            os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: recursive
+      
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.22'
+          cache: 'go-build'
+      
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: 'latest'
 
-      - name: Build wails
-        uses: dAppServer/wails-build-action@v2.2
-        id: build
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build Wails
+        run: wails build
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
         with:
-          build-name: ${{ matrix.build.name }}
-          build-platform: ${{ matrix.build.platform }}
-          package: true
-          go-version: '1.22'
-          node-version: '20'
+          name: ${{ matrix.build.name }}
+          path: build/bin/*

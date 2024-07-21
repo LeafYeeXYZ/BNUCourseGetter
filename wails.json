@@ -1,6 +1,6 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "xyqk",
+  "name": "小鸦抢课",
   "outputfilename": "xyqk",
   "frontend:install": "bun install",
   "frontend:build": "bun run build",
