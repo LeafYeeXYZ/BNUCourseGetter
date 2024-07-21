@@ -20,16 +20,16 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'windows-amd64'
-            platform:  'windows/amd64'
-            os: 'windows-latest'
-          - name: 'windows-arm64'
-            platform:  'windows/arm64'
-            os: 'windows-latest'
-          - name: 'mac-amd64'
-            platform:  'darwin/amd64'
-            os: 'macos-latest'
-          - name: 'mac-arm64'
+          # - name: 'windows-amd64'
+          #   platform:  'windows/amd64'
+          #   os: 'windows-latest'
+          # - name: 'windows-arm64'
+          #   platform:  'windows/arm64'
+          #   os: 'windows-latest'
+          # - name: 'mac-amd64'
+          #   platform:  'darwin/amd64'
+          #   os: 'macos-latest'
+          - name: 'Build'
             platform:  'darwin/arm64'
             os: 'macos-latest'
 
@@ -60,10 +60,18 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Build Wails
-        run: wails build
+        run: wails build -platform windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: ${{ matrix.build.name }}
-          path: build/bin/*
+          files: |
+            build/bin/*
+          draft: false
+          prerelease: true
+          
+      # - name: Upload Artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ matrix.build.name }}
+      #     path: build/bin/*

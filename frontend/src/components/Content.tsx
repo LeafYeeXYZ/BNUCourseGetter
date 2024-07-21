@@ -100,7 +100,7 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
         localStorage.setItem(key, String(value[key]))
       }
     }
-    localStorage.getItem('isRemember') === 'no' && localStorage.setItem('password', '') // 清除密码
+    localStorage.getItem('isRemember') === 'yes' || localStorage.setItem('password', '') // 清除密码
 
     try {
       // 发送开始抢课事件
