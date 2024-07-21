@@ -46,11 +46,9 @@
 
 `1.4.0` 及以前的二进制文件仅在 `Windows` 下测试过, `1.5.0` 及以后的二进制文件仅在 `MacOS` 下测试过, 其他平台如果有问题请提交 `Issue` 或 `Pull Request`
 
-#### MacOS 使用方法
-由于 `Github Action` 构建时出错, 所以请自行编译, 流程如下:
-
+#### 手动构建方法
 1. 安装 `Go`、`Node.js`、`Bun` (请自行前往官网下载安装)
 2. 执行 `go install github.com/wailsapp/wails/cmd/wails@latest` 安装 `Wails`
-3. 克隆本项目
+3. 执行 `git clone xxx` 克隆本项目
 4. 在项目目录下执行 `wails build` 编译
 5. 在 `build/bin` 目录下找到编译好的二进制文件, 执行即可
