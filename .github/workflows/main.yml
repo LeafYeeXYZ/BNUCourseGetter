@@ -14,7 +14,6 @@ jobs:
   build:
     permissions:
       contents: write
-      packages: write
     strategy:
     # Failure in one platform build won't impact the others
       fail-fast: false
@@ -61,6 +60,9 @@ jobs:
 
       - name: Build Wails
         run: wails build -platform windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
+
+      - name: Zip Mac Build
+        run: zip -r build/bin/小鸦抢课-amd64.zip build/bin/小鸦抢课-amd64
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
