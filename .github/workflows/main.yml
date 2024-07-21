@@ -62,7 +62,7 @@ jobs:
         run: wails build -platform windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
 
       - name: Zip Mac Build
-        run: zip -r build/bin/小鸦抢课-amd64.zip build/bin/小鸦抢课-amd64
+        run: zip -r build/bin/小鸦抢课-amd64.app.zip build/bin/小鸦抢课-amd64.app && zip -r build/bin/小鸦抢课-arm64.app.zip build/bin/小鸦抢课-arm64.app
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
