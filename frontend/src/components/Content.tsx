@@ -1,9 +1,9 @@
-import '../styles/Content.css'
 import { Dialog } from '../wailsjs/go/main/App'
 import { Form, Radio, Input, Button, Switch, Space } from 'antd'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons'
 import type { CheckboxOptionType } from 'antd'
-import type { SystemStatus, BrowserStatus, CurrentStatus } from '../App'
+import { useZustand } from '../libs/useZustand'
+import type { SystemStatus, BrowserStatus } from '../libs/types'
 import { useState, useRef, useEffect } from 'react'
 import { EventsEmit } from '../wailsjs/runtime/runtime'
 import { CatchCoursePub, WatchCoursePub, WatchCourseMaj, CatchCourseMaj, WatchCoursePubSync, WatchCourseMajSync } from '../wailsjs/go/main/App'
@@ -43,22 +43,15 @@ const funcs = {
   },
 }
 
-interface ContentProps {
-  browserStatus: BrowserStatus
-  systemStatus: SystemStatus
-  currentStatus: CurrentStatus
-  importantStatus: CurrentStatus
-}
-
 type FormValues = {
   mode: 'CatchCourse' | 'WatchCourse' | 'WatchCourseSync' // 存在 localStorage
   speed: number // 存在 localStorage
   courseType: 'public' | 'major' // 存在 localStorage
   studentID: string // 存在 localStorage
   password: string // 存在 localStorage (如果记住密码)
-  // courseID: string 
-  // classID: string 
   courses: { courseID: string, classID: string }[] // 存在 localStorage
+  _courseID: string
+  _classID: string
   [key: string]: string | number | { courseID: string, classID: string }[]
 }
 
@@ -69,29 +62,28 @@ if (Number(localStorage.getItem('version')) !== VERSION) {
   localStorage.setItem('version', String(VERSION))
 }
 
-export function Content({ browserStatus, systemStatus, currentStatus, importantStatus }: ContentProps) {
+export function Content() {
 
-  // 表单是否禁用
-  const [disableForm, setDisableForm] = useState<boolean>(false)
- 
+  const { browserStatus, systemStatus, currentStatus, importantStatus, disabled, setDisabled } = useZustand()
+  const [form] = Form.useForm<FormValues>()
   // 表单提交回调
   async function handleSubmit(browserStatus: BrowserStatus, systemStatus: SystemStatus, value: FormValues) {
     // 检查浏览器状态
-    if (browserStatus.status === '安装中') {
+    if (browserStatus === '安装中') {
       Dialog('warning', '请等待浏览器安装完成')
       return
-    } else if (browserStatus.status === '安装失败') {
+    } else if (browserStatus === '安装失败') {
       Dialog('error', '浏览器安装失败, 请检查网络并尝试重启应用')
       return
     }
     // 检查课程添加
     if (value.courses.length === 0) {
       Dialog('error', '请添加课程')
-      setDisableForm(false)
+      setDisabled(false)
       return
     }
     // 禁用表单
-    setDisableForm(true)
+    setDisabled(true)
     // 保存相关数据
     for (const key in value) { 
       if (key === 'courses') {
@@ -110,7 +102,7 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
       )
       // 如果不点击 Yes, 则不执行
       if (res !== 'Yes') {
-        setDisableForm(false)
+        setDisabled(false)
         return
       }
       // 课程和班级
@@ -120,14 +112,14 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
       if (courseID.length > 1 && value.mode !== 'WatchCourseSync' && value.mode !== 'WatchCourse') {
         const res = await Dialog('question', `即将开启 ${courseID.length} 个页面同时抢课\n抢课模式下, 每个页面占用内存会逐渐增加\n所以建议不要提前太多时间开始抢课\n请您确认是否继续?`)
         if (res !== 'Yes') {
-          setDisableForm(false)
+          setDisabled(false)
           return
         }
       }
       // 检查并设置系统状态
       if (systemStatus !== '空闲') {
         Dialog('error', `请等待当前 ${systemStatus} 状态结束`)
-        setDisableForm(false)
+        setDisabled(false)
         return
       } else if (value.mode === 'WatchCourse') {
         EventsEmit('systemStatus', '多线程蹲课中')
@@ -161,16 +153,16 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
       EventsEmit('importantStatus', `选课出错: ${err || '未知错误'}`)
     } finally {
       EventsEmit('systemStatus', '空闲')
-      setDisableForm(false)
+      setDisabled(false)
     }
   }
 
   // 日志列表
   const logs = currentStatus.map((status, index) => (
-    <p key={index} className='content-logs-item'>{status}</p>
+    <p key={index} className='whitespace-nowrap overflow-x-auto opacity-85 text-xs'>{status}</p>
   ))
   const results = importantStatus.map((status, index) => (
-    <p key={index} className='content-logs-item'>{status}</p>
+    <p key={index} className='whitespace-nowrap overflow-x-auto opacity-85 text-xs'>{status}</p>
   ))
   // 自动滚动到底部
   const logsRef = useRef<HTMLDivElement>(null)
@@ -183,21 +175,17 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
   }, [results])
 
   // 课程列表
-  const courseIDInput = useRef<HTMLInputElement>(null)
-  const classIDInput = useRef<HTMLInputElement>(null)
   const [courses, setCourses] = useState<{ courseID: string, classID: string }[]>(JSON.parse(localStorage.getItem('courses') ?? '[]'))
 
   return (
     <div
-      id='content'
+      className='w-full h-full relative grid grid-rows-[1fr,10rem] overflow-hidden'
     >
-      <div className='content-main'>
+      <div className='w-full flex items-center justify-center'>
         <Form
-          name='form'
-          className='content-form'
-          labelCol={{ span: 6 }}
-          wrapperCol={{ span: 16 }}
-          disabled={disableForm}
+          form={form}
+          className='w-full max-w-md'
+          disabled={disabled}
           autoComplete='off'
           initialValues={{
             mode: localStorage.getItem('mode') || 'CatchCourse',
@@ -206,16 +194,10 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
             studentID: localStorage.getItem('studentID') || '',
             password: localStorage.getItem('password') || '',
           }}
-          style={{ 
-            width: '90%',
-            maxWidth: 600,
-            paddingRight: 13,
-          }}
           onFinish={async value => {
             await handleSubmit(browserStatus, systemStatus, { ...value, courses })
           }}
         >
-            
             <Form.Item
               label='抢课模式'
               name='mode'
@@ -253,7 +235,7 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
             </Form.Item>
     
             <Form.Item label='学号密码' required style={{ marginBottom: '1rem' }}>
-              <Space.Compact>
+              <Space.Compact block>
                 <Form.Item
                   name='studentID'
                   noStyle
@@ -273,10 +255,7 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
 
             <Form.Item label='抢课设置' style={{ marginBottom: '1rem' }}>
               <Switch
-                style={{ 
-                  opacity: 0.8,
-                  marginRight: 10,
-                }}
+                className='mr-4'
                 checkedChildren='记住密码'
                 unCheckedChildren='记住密码'
                 defaultChecked={localStorage.getItem('isRemember') === 'yes'}
@@ -290,10 +269,7 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
                 }}
               />
               <Switch
-                style={{ 
-                  opacity: 0.8,
-                  marginRight: 10,
-                }}
+                className='mr-4'
                 checkedChildren='显示浏览器'
                 unCheckedChildren='显示浏览器'
                 defaultChecked={localStorage.getItem('isHeadless') === 'no'}
@@ -306,9 +282,6 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
                 }}
               />
               <Switch
-                style={{ 
-                  opacity: 0.8,
-                }}
                 checkedChildren='蹲课保护'
                 unCheckedChildren='蹲课保护'
                 defaultChecked={localStorage.getItem('isProtect') === 'yes'}
@@ -323,16 +296,25 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
             </Form.Item>
     
             <Form.Item label='添加课程'>
-              <Space.Compact style={{ width: '100%' }}>
-                <input className='antd-like-input' placeholder='课程代码, 例如 GE610088771' style={{ width: '60%' }} ref={courseIDInput} autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' />
-                <input className='antd-like-input' placeholder='上课班号, 例如 01' style={{ width: '40%' }} ref={classIDInput} autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' />
-                <Button type='default' style={{ width: '9%' }} icon={<PlusOutlined />} onClick={() => {
-                  if (courseIDInput.current!.value && classIDInput.current!.value) {
-                    const courseID = courseIDInput.current!.value
-                    const classID = classIDInput.current!.value
+              <Space.Compact block>
+                <Form.Item noStyle name='_courseID'>
+                  <Input
+                    placeholder='课程代码, 例如 GE610088771' 
+                    autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
+                  />
+                </Form.Item>
+                <Form.Item noStyle name='_classID'>
+                  <Input 
+                    placeholder='上课班号, 例如 01' 
+                    autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
+                  />
+                </Form.Item>
+                <Button type='default' icon={<PlusOutlined />} onClick={() => {
+                  const courseID = form.getFieldValue('_courseID')
+                  const classID = form.getFieldValue('_classID')
+                  if (courseID && classID) {
                     setCourses(prev => [...prev, { courseID: courseID, classID: classID }])
-                    courseIDInput.current!.value = ''
-                    classIDInput.current!.value = ''
+                    form.resetFields(['_courseID', '_classID'])
                   } else {
                     Dialog('error', '请输入课程代码和上课班号')
                   }
@@ -340,42 +322,40 @@ export function Content({ browserStatus, systemStatus, currentStatus, importantS
               </Space.Compact>
             </Form.Item>
 
-            <div className='content-courses'>
+            <div className='mb-4 flex flex-wrap items-center justify-center text-nowrap gap-2'>
             {
               courses.length > 0 ? courses.map((course, index) => (
-                <div key={index} className='content-courses-item'>
+                <div key={index} className='flex items-center justify-center gap-2 border flex-nowrap text-xs py-1 px-2 rounded-full'>
                   <p>{course.courseID} | {course.classID}</p>
                   <CloseOutlined onClick={() => {
                     setCourses(prev => prev.filter((_, i) => i !== index))
-                  }} className='content-courses-close' />
+                  }} className='cursor-pointer' />
                 </div>
-              )) : <p className='content-courses-empty'>请添加课程</p>
+              )) : <p className='text-sm'>请添加课程</p>
             }
             </div>
 
             <Button
               type='default'
               htmlType='submit'
-              style={{ 
-                width: '75%',
-                transform: 'translateX(19.5%)',
-              }}
+              block
             >
               开始
             </Button>
         </Form>
       </div>
 
-      <div className='content-logs-container'>
+      <div className='w-full h-full grid grid-cols-2'>
         <section
           ref={logsRef}
-          className='content-logs'
+          style={{ borderRight: '1px dashed #9f1239' }}
+          className='p-2 border-t bg-[#fffaf9] border-rose-800 border-solid'
         >
           {logs}
         </section>
         <section
           ref={resultsRef}
-          className='content-logs'
+          className='p-2 border-t bg-[#fffaf9] border-rose-800 border-solid'
         >
           {results}
         </section>
