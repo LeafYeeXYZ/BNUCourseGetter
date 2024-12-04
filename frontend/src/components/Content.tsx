@@ -348,14 +348,14 @@ export function Content() {
       <div className='w-full h-full grid grid-cols-2'>
         <section
           ref={logsRef}
-          style={{ borderRight: '1px dashed #9f1239' }}
-          className='p-2 border-t bg-[#fffaf9] border-rose-800 border-solid'
+          style={{ borderRight: '1px dashed #fda4af' }}
+          className='p-2 border-t bg-[#fffaf9] border-rose-300 border-solid overflow-auto'
         >
           {logs}
         </section>
         <section
           ref={resultsRef}
-          className='p-2 border-t bg-[#fffaf9] border-rose-800 border-solid'
+          className='p-2 border-t bg-[#fffaf9] border-rose-300 border-solid overflow-auto'
         >
           {results}
         </section>
