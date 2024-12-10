@@ -194,7 +194,7 @@ export function Content() {
 
   return (
     <div
-      className='w-full h-full relative grid grid-rows-[1fr,10rem] overflow-hidden'
+      className='w-full h-full relative grid grid-rows-[1fr,10rem] overflow-hidden border-t border-rose-100 border-solid'
     >
       <div className='w-full flex flex-col items-center justify-center overflow-auto py-4'>
         <Form
@@ -253,21 +253,6 @@ export function Content() {
               <p>
                 软件设置
               </p>
-              <Form.Item
-                noStyle
-                name='speed'
-                rules={[{ required: true, message: '请选择刷新频率' }]}
-              >
-                <Select
-                  className='mx-1'
-                  options={[ // 刷新频率
-                    { label: '刷新频率: 每半秒', value: 500 },
-                    { label: '刷新频率: 每秒(推荐)', value: 1000 },
-                    { label: '刷新频率: 每两秒', value: 2000 },
-                    { label: '刷新频率: 每五秒', value: 5000 },
-                  ]}
-                />
-              </Form.Item>
               <Switch
                 checkedChildren='记住密码'
                 unCheckedChildren='记住密码'
@@ -305,6 +290,23 @@ export function Content() {
                   }
                 }}
               />
+              <p>
+                刷新频率
+              </p>
+              <Form.Item
+                noStyle
+                name='speed'
+                rules={[{ required: true, message: '请选择刷新频率' }]}
+              >
+                <Select
+                  options={[ // 刷新频率
+                    { label: '每半秒', value: 500 },
+                    { label: '每秒(推荐)', value: 1000 },
+                    { label: '每两秒', value: 2000 },
+                    { label: '每五秒', value: 5000 },
+                  ]}
+                />
+              </Form.Item>
             </div>
             <Form.Item label='添加课程'>
               <Space.Compact block>
@@ -370,13 +372,13 @@ export function Content() {
         <section
           ref={logsRef}
           style={{ borderRight: '1px dashed #fda4af' }}
-          className='p-2 border-t bg-[#fffaf9] border-rose-300 border-solid overflow-auto'
+          className='p-2 border-y bg-[#fffaf9] border-rose-300 border-b-rose-100 border-solid overflow-auto'
         >
           {logs}
         </section>
         <section
           ref={resultsRef}
-          className='p-2 border-t bg-[#fffaf9] border-rose-300 border-solid overflow-auto'
+          className='p-2 border-y bg-[#fffaf9] border-rose-300 border-b-rose-100 border-solid overflow-auto'
         >
           {results}
         </section>

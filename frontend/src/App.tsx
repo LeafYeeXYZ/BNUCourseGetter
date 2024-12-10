@@ -61,11 +61,11 @@ export default function App() {
   return (
     <ConfigProvider {...AntdConfig}>
     <main 
-      className='grid grid-rows-[40px,1fr,30px] w-dvvw h-dvh overflow-hidden rounded-xl bg-white'
+      className='grid grid-rows-[40px,1fr,25px] w-dvvw h-dvh overflow-hidden rounded-xl bg-white'
     >
-        <Header />
-        <Content />
-        <Footer />
+      <Header />
+      <Content />
+      <Footer />
     </main>
     </ConfigProvider>
   )
