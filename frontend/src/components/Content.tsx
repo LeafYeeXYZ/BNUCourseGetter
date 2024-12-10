@@ -1,33 +1,11 @@
 import { Dialog } from '../wailsjs/go/main/App'
-import { Form, Radio, Input, Button, Switch, Space } from 'antd'
+import { Form, Radio, Input, Button, Switch, Space, Select } from 'antd'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons'
-import type { CheckboxOptionType } from 'antd'
 import { useZustand } from '../libs/useZustand'
 import type { SystemStatus, BrowserStatus } from '../libs/types'
 import { useState, useRef, useEffect } from 'react'
 import { EventsEmit } from '../wailsjs/runtime/runtime'
 import { CatchCoursePub, WatchCoursePub, WatchCourseMaj, CatchCourseMaj, WatchCoursePubSync, WatchCourseMajSync } from '../wailsjs/go/main/App'
-
-// 表单选项
-const option: {
-  [key: string]: CheckboxOptionType[]
-} = {
-  mode: [ // 抢课模式
-    { label: '抢课', value: 'CatchCourse' },
-    { label: '多线程蹲课', value: 'WatchCourse' },
-    { label: '单线程蹲课', value: 'WatchCourseSync' },
-  ],
-  speed: [ // 刷新频率
-    { label: '每半秒', value: 500 },
-    { label: '每秒 (推荐)', value: 1000 },
-    { label: '每两秒', value: 2000 },
-    { label: '每五秒', value: 5000 },
-  ],
-  courseType: [ // 课程类别
-    { label: '选公共选修课', value: 'public' },
-    { label: '按开课计划选课', value: 'major' },
-  ],
-}
 
 // 抢课函数
 const funcs = {
@@ -46,17 +24,21 @@ const funcs = {
 type FormValues = {
   mode: 'CatchCourse' | 'WatchCourse' | 'WatchCourseSync' // 存在 localStorage
   speed: number // 存在 localStorage
-  courseType: 'public' | 'major' // 存在 localStorage
   studentID: string // 存在 localStorage
   password: string // 存在 localStorage (如果记住密码)
-  courses: { courseID: string, classID: string }[] // 存在 localStorage
+  courses: { 
+    courseID: string, 
+    classID: string,
+    type: 'public' | 'major'
+  }[] // 存在 localStorage
   _courseID: string
   _classID: string
+  _type: 'public' | 'major'
   [key: string]: string | number | { courseID: string, classID: string }[]
 }
 
 // 如果版本不一致, 则清除 localStorage
-const VERSION: number = 2
+const VERSION: number = 3
 if (Number(localStorage.getItem('version')) !== VERSION) {
   localStorage.clear()
   localStorage.setItem('version', String(VERSION))
@@ -106,11 +88,11 @@ export function Content() {
         return
       }
       // 课程和班级
-      const courseID: string[] = value.courses.map(course => course.courseID)
-      const classID: string[] = value.courses.map(course => course.classID)
+      const publicCourses = value.courses.filter(course => course.type === 'public')
+      const majorCourses = value.courses.filter(course => course.type === 'major')
       // 如果课程数大于 1, 则警告
-      if (courseID.length > 1 && value.mode !== 'WatchCourseSync' && value.mode !== 'WatchCourse') {
-        const res = await Dialog('question', `即将开启 ${courseID.length} 个页面同时抢课\n抢课模式下, 每个页面占用内存会逐渐增加\n所以建议不要提前太多时间开始抢课\n请您确认是否继续?`)
+      if (value.courses.length > 1 && value.mode === 'CatchCourse') {
+        const res = await Dialog('question', `即将开启 ${value.courses.length} 个页面同时抢课\n抢课模式下, 每个页面占用内存会逐渐增加\n所以建议不要提前太多时间开始抢课\n请您确认是否继续?`)
         if (res !== 'Yes') {
           setDisabled(false)
           return
@@ -143,10 +125,43 @@ export function Content() {
             }
           }
         }
-        await autoRetry(funcs[value.courseType][value.mode], value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
+        // 开始蹲课保护
+        if (publicCourses.length > 0 && majorCourses.length > 0) {
+          const res = await Promise.allSettled([
+            autoRetry(funcs.public[value.mode], value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
+            autoRetry(funcs.major[value.mode], value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
+          ])
+          res.forEach((res) => {
+            if (res.status === 'rejected') {
+              EventsEmit('currentStatus', `选课出错: ${res.reason || '未知错误'}`)
+              EventsEmit('importantStatus', `选课出错: ${res.reason || '未知错误'}`)
+            }
+          })
+          return
+        } else if (publicCourses.length > 0) {
+          await autoRetry(funcs.public[value.mode], value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+        } else if (majorCourses.length > 0) {
+          await autoRetry(funcs.major[value.mode], value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+        }
       } else {
         // 关闭蹲课保护或抢课
-        await funcs[value.courseType][value.mode](value.speed, value.studentID, value.password, courseID, classID, localStorage.getItem('isHeadless') !== 'no')
+        if (publicCourses.length > 0 && majorCourses.length > 0) {
+          const res = await Promise.allSettled([
+            funcs.public[value.mode](value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
+            funcs.major[value.mode](value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
+          ])
+          res.forEach((res) => {
+            if (res.status === 'rejected') {
+              EventsEmit('currentStatus', `选课出错: ${res.reason || '未知错误'}`)
+              EventsEmit('importantStatus', `选课出错: ${res.reason || '未知错误'}`)
+            }
+          })
+          return
+        } else if (publicCourses.length > 0) {
+          await funcs.public[value.mode](value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+        } else if (majorCourses.length > 0) {
+          await funcs.major[value.mode](value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+        }
       }
     } catch (err) {
       EventsEmit('currentStatus', `选课出错: ${err || '未知错误'}`)
@@ -175,18 +190,19 @@ export function Content() {
   }, [results])
 
   // 课程列表
-  const [courses, setCourses] = useState<{ courseID: string, classID: string }[]>(JSON.parse(localStorage.getItem('courses') ?? '[]'))
+  const [courses, setCourses] = useState<FormValues['courses']>(JSON.parse(localStorage.getItem('courses') ?? '[]'))
 
   return (
     <div
       className='w-full h-full relative grid grid-rows-[1fr,10rem] overflow-hidden'
     >
-      <div className='w-full flex items-center justify-center'>
+      <div className='w-full flex flex-col items-center justify-center overflow-auto py-4'>
         <Form
           form={form}
-          className='w-full max-w-md'
+          className='w-full max-w-lg py-4'
           disabled={disabled}
           autoComplete='off'
+          layout='vertical'
           initialValues={{
             mode: localStorage.getItem('mode') || 'CatchCourse',
             speed: Number(localStorage.getItem('speed')) || 1000,
@@ -204,36 +220,16 @@ export function Content() {
               rules={[{ required: true, message: '请选择抢课模式' }]}
             >
               <Radio.Group
-                options={option.mode}
+                block
+                options={[ // 抢课模式
+                  { label: '抢课', value: 'CatchCourse' },
+                  { label: '多线程蹲课', value: 'WatchCourse' },
+                  { label: '单线程蹲课', value: 'WatchCourseSync' },
+                ]}
                 optionType='button'
                 buttonStyle='solid'
               />
             </Form.Item>
-    
-            <Form.Item
-              label='刷新频率'
-              name='speed'
-              rules={[{ required: true, message: '请选择刷新频率' }]}
-            >
-              <Radio.Group
-                options={option.speed}
-                optionType='button'
-                buttonStyle='solid'
-              />
-            </Form.Item>
-
-            <Form.Item
-              label='课程类别'
-              name='courseType'
-              rules={[{ required: true, message: '请选择课程类别' }]}
-            >
-              <Radio.Group
-                options={option.courseType}
-                optionType='button'
-                buttonStyle='solid'
-              />
-            </Form.Item>
-    
             <Form.Item label='学号密码' required style={{ marginBottom: '1rem' }}>
               <Space.Compact block>
                 <Form.Item
@@ -253,9 +249,26 @@ export function Content() {
               </Space.Compact>
             </Form.Item>
 
-            <Form.Item label='抢课设置' style={{ marginBottom: '1rem' }}>
+            <div className='mb-4 mt-6 flex items-center justify-start gap-2'>
+              <p>
+                软件设置
+              </p>
+              <Form.Item
+                noStyle
+                name='speed'
+                rules={[{ required: true, message: '请选择刷新频率' }]}
+              >
+                <Select
+                  className='mx-1'
+                  options={[ // 刷新频率
+                    { label: '刷新频率: 每半秒', value: 500 },
+                    { label: '刷新频率: 每秒(推荐)', value: 1000 },
+                    { label: '刷新频率: 每两秒', value: 2000 },
+                    { label: '刷新频率: 每五秒', value: 5000 },
+                  ]}
+                />
+              </Form.Item>
               <Switch
-                className='mr-4'
                 checkedChildren='记住密码'
                 unCheckedChildren='记住密码'
                 defaultChecked={localStorage.getItem('isRemember') === 'yes'}
@@ -269,7 +282,6 @@ export function Content() {
                 }}
               />
               <Switch
-                className='mr-4'
                 checkedChildren='显示浏览器'
                 unCheckedChildren='显示浏览器'
                 defaultChecked={localStorage.getItem('isHeadless') === 'no'}
@@ -293,10 +305,18 @@ export function Content() {
                   }
                 }}
               />
-            </Form.Item>
-    
+            </div>
             <Form.Item label='添加课程'>
               <Space.Compact block>
+                <Form.Item noStyle name='_type'>
+                  <Select
+                    placeholder='课程类型'
+                    options={[
+                      { label: '选公共选修课', value: 'public' },
+                      { label: '按开课计划选课', value: 'major' },
+                    ]}
+                  />
+                </Form.Item>
                 <Form.Item noStyle name='_courseID'>
                   <Input
                     placeholder='课程代码, 例如 GE610088771' 
@@ -312,11 +332,12 @@ export function Content() {
                 <Button type='default' icon={<PlusOutlined />} onClick={() => {
                   const courseID = form.getFieldValue('_courseID')
                   const classID = form.getFieldValue('_classID')
-                  if (courseID && classID) {
-                    setCourses(prev => [...prev, { courseID: courseID, classID: classID }])
-                    form.resetFields(['_courseID', '_classID'])
+                  const type = form.getFieldValue('_type')
+                  if (courseID && classID && type) {
+                    setCourses(prev => [...prev, { courseID: courseID, classID: classID, type: type }])
+                    form.resetFields(['_courseID', '_classID', '_type'])
                   } else {
-                    Dialog('error', '请输入课程代码和上课班号')
+                    Dialog('error', '请输入课程类别、课程代码、上课班号')
                   }
                 }} />
               </Space.Compact>
@@ -326,7 +347,7 @@ export function Content() {
             {
               courses.length > 0 ? courses.map((course, index) => (
                 <div key={index} className='flex items-center justify-center gap-2 border flex-nowrap text-xs py-1 px-2 rounded-full'>
-                  <p>{course.courseID} | {course.classID}</p>
+                  <p>{course.type === 'public' ? '选公共选修课' : '按开课计划选课'} | {course.courseID} | {course.classID}</p>
                   <CloseOutlined onClick={() => {
                     setCourses(prev => prev.filter((_, i) => i !== index))
                   }} className='cursor-pointer' />

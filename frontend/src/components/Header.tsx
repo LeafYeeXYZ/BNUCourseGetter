@@ -39,8 +39,8 @@ export function Header() {
         className='w-full h-full flex items-center justify-start text-sm gap-2 pl-4'
       >
         <span className='font-bold'>小鸦抢课</span>
-        <Tag className='m-0'>2.0.0</Tag> 
-        <Tag className='m-0'>{systemStatus}</Tag>
+        <Tag color='volcano' className='m-0'>2.0.0</Tag> 
+        <Tag color='volcano' className='m-0'>{systemStatus}</Tag>
       </p>
       <button
         title={isAlwaysOnTop ? '取消置顶' : '窗口置顶'}
