@@ -4,13 +4,13 @@ import type { SystemStatus, BrowserStatus } from './types'
 export const useZustand = create<GlobalState>()((set) => ({
   disabled: false,
   setDisabled: (disabled) => set({ disabled }),
-  currentStatus: [`${new Date().toLocaleTimeString()}  开始加载`],
+  currentStatus: [],
   setCurrentStatus: (updater) => {
     set((state) => {
       return { currentStatus: updater(state.currentStatus) }
     })
   },
-  importantStatus: [`${new Date().toLocaleTimeString()}  开始加载`],
+  importantStatus: [],
   setImportantStatus: (updater) => {
     set((state) => {
       return { importantStatus: updater(state.importantStatus) }

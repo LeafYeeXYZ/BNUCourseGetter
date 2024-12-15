@@ -46,7 +46,6 @@ export default function App() {
       // 最多同时保留 500 条记录
       setCurrentStatus(prev => [...prev.slice(-499), `${new Date().toLocaleTimeString()}  ${status}`])
     })
-    EventsEmit('currentStatus', '系统已启动 (此处将展示日志)')
     return () => EventsOff('currentStatus')
   }, [setCurrentStatus])
   // 仅在此处 (使用事件) 修改重要状态
@@ -55,7 +54,6 @@ export default function App() {
       // 最多同时保留 100 条记录
       setImportantStatus(prev => [...prev.slice(-99), `${new Date().toLocaleTimeString()}  ${status}`])
     })
-    EventsEmit('importantStatus', '系统已启动 (此处将展示结果)')
     return () => EventsOff('importantStatus')
   }, [setImportantStatus])
 

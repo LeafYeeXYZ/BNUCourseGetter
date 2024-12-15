@@ -391,13 +391,13 @@ export function Content() {
           style={{ borderRight: '1px dashed #fda4af' }}
           className='p-2 border-y bg-[#fffaf9] border-rose-300 border-b-rose-100 border-solid overflow-auto'
         >
-          {logs}
+          {logs.length > 0 ? logs : <p className='w-full h-full flex items-center justify-center text-sm'>此处将显示日志</p>}
         </section>
         <section
           ref={resultsRef}
           className='p-2 border-y bg-[#fffaf9] border-rose-300 border-b-rose-100 border-solid overflow-auto'
         >
-          {results}
+          {results.length > 0 ? results : <p className='w-full h-full flex items-center justify-center text-sm'>此处将显示结果</p>}
         </section>
       </div>
 
