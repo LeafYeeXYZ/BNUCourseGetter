@@ -1,5 +1,5 @@
 import { Dialog } from '../wailsjs/go/main/App'
-import { Form, Radio, Input, Button, Switch, Space, Select } from 'antd'
+import { Form, Radio, Input, Button, Space, Select, Checkbox } from 'antd'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons'
 import { useZustand } from '../libs/useZustand'
 import type { SystemStatus, BrowserStatus } from '../libs/types'
@@ -214,85 +214,81 @@ export function Content() {
             await handleSubmit(browserStatus, systemStatus, { ...value, courses })
           }}
         >
-            <Form.Item
-              label='抢课模式'
-              name='mode'
-              rules={[{ required: true, message: '请选择抢课模式' }]}
-            >
-              <Radio.Group
-                block
-                options={[ // 抢课模式
-                  { label: '抢课', value: 'CatchCourse' },
-                  { label: '多线程蹲课', value: 'WatchCourse' },
-                  { label: '单线程蹲课', value: 'WatchCourseSync' },
-                ]}
-                optionType='button'
-                buttonStyle='solid'
-              />
-            </Form.Item>
-            <Form.Item label='学号密码' required style={{ marginBottom: '1rem' }}>
-              <Space.Compact block>
-                <Form.Item
-                  name='studentID'
-                  noStyle
-                  rules={[{ required: true, message: '请输入学号' }]}
+          <Form.Item label='抢课模式' required style={{ marginBottom: '1rem' }}>
+            <Space.Compact block>
+              <Form.Item
+                name='mode'
+                noStyle
+                rules={[{ required: true, message: '请选择抢课模式' }]}
+              >
+                <Radio.Group
+                  className='w-full'
+                  block
+                  options={[
+                    { label: '抢课', value: 'CatchCourse' },
+                    { label: '多线程蹲课', value: 'WatchCourse' },
+                    { label: '单线程蹲课', value: 'WatchCourseSync', style: { borderStartEndRadius: '0px', borderEndEndRadius: '0px', borderRight: 'none' } },
+                  ]}
+                  optionType='button'
+                  buttonStyle='solid'
+                />
+              </Form.Item>
+              <div className='flex items-center justify-center border rounded-e-md border-[#d9d9d9] pl-3 pr-1'>
+                <Checkbox
+                  className='text-nowrap'
+                  defaultChecked={localStorage.getItem('isProtect') === 'yes'}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      localStorage.setItem('isProtect', 'yes')
+                    } else {
+                      localStorage.setItem('isProtect', 'no')
+                    }
+                  }}
                 >
-                  <Input style={{ width: '50%' }} placeholder='请输入学号' />
-                </Form.Item>
-                <Form.Item
-                  name='password'
-                  noStyle
-                  rules={[{ required: true, message: '请输入密码' }]}
+                  蹲课保护
+                </Checkbox>
+              </div>
+            </Space.Compact>
+          </Form.Item>
+          <Form.Item label='学号密码' required style={{ marginBottom: '1rem' }}>
+            <Space.Compact block>
+              <Form.Item
+                name='studentID'
+                noStyle
+                rules={[{ required: true, message: '请输入学号' }]}
+              >
+                <Input style={{ width: '50%' }} placeholder='请输入学号' />
+              </Form.Item>
+              <Form.Item
+                name='password'
+                noStyle
+                rules={[{ required: true, message: '请输入密码' }]}
+              >
+                <Input.Password style={{ width: '50%' }} placeholder='请输入密码' />
+              </Form.Item>
+              <div className='flex items-center justify-center border rounded-e-md border-[#d9d9d9] pl-3 pr-1'>
+                <Checkbox
+                  className='text-nowrap'
+                  defaultChecked={localStorage.getItem('isRemember') === 'yes'}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      localStorage.setItem('isRemember', 'yes')
+                    } else {
+                      localStorage.setItem('isRemember', 'no')
+                      localStorage.setItem('password', '')
+                    }
+                  }}
                 >
-                  <Input.Password style={{ width: '50%' }} placeholder='请输入密码' />
-                </Form.Item>
-              </Space.Compact>
-            </Form.Item>
-
-            <div className='mb-4 mt-6 flex items-center justify-start gap-2'>
-              <p>
-                软件设置
-              </p>
-              <Switch
-                checkedChildren='记住密码'
-                unCheckedChildren='记住密码'
-                defaultChecked={localStorage.getItem('isRemember') === 'yes'}
-                onChange={checked => {
-                  if (checked) {
-                    localStorage.setItem('isRemember', 'yes')
-                  } else {
-                    localStorage.setItem('isRemember', 'no')
-                    localStorage.setItem('password', '')
-                  }
-                }}
-              />
-              <Switch
-                checkedChildren='显示浏览器'
-                unCheckedChildren='显示浏览器'
-                defaultChecked={localStorage.getItem('isHeadless') === 'no'}
-                onChange={checked => {
-                  if (checked) {
-                    localStorage.setItem('isHeadless', 'no')
-                  } else {
-                    localStorage.setItem('isHeadless', 'yes')
-                  }
-                }}
-              />
-              <Switch
-                checkedChildren='蹲课保护'
-                unCheckedChildren='蹲课保护'
-                defaultChecked={localStorage.getItem('isProtect') === 'yes'}
-                onChange={checked => {
-                  if (checked) {
-                    localStorage.setItem('isProtect', 'yes')
-                  } else {
-                    localStorage.setItem('isProtect', 'no')
-                  }
-                }}
-              />
-              <p>
+                  记住密码
+                </Checkbox>
+              </div>
+            </Space.Compact>
+          </Form.Item>
+          <Form.Item label='其他设置' style={{ marginBottom: '1rem' }}>
+            <Space.Compact block>
+              <div className='text-nowrap bg-gray-100 border border-[#d9d9d9] border-e-0 rounded-s-md px-3 flex items-center justify-center'>
                 刷新频率
-              </p>
+              </div>
               <Form.Item
                 noStyle
                 name='speed'
@@ -307,31 +303,51 @@ export function Content() {
                   ]}
                 />
               </Form.Item>
-            </div>
-            <Form.Item label='添加课程'>
-              <Space.Compact block>
-                <Form.Item noStyle name='_type'>
-                  <Select
-                    placeholder='课程类型'
-                    options={[
-                      { label: '选公共选修课', value: 'public' },
-                      { label: '按开课计划选课', value: 'major' },
-                    ]}
-                  />
-                </Form.Item>
-                <Form.Item noStyle name='_courseID'>
-                  <Input
-                    placeholder='课程代码, 例如 GE610088771' 
-                    autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
-                  />
-                </Form.Item>
-                <Form.Item noStyle name='_classID'>
-                  <Input 
-                    placeholder='上课班号, 例如 01' 
-                    autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
-                  />
-                </Form.Item>
-                <Button type='default' icon={<PlusOutlined />} onClick={() => {
+              <div className='flex items-center justify-center border rounded-e-md border-[#d9d9d9] pl-3 pr-1'>
+                <Checkbox
+                  className='text-nowrap'
+                  defaultChecked={localStorage.getItem('isHeadless') === 'no'}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      localStorage.setItem('isHeadless', 'no')
+                    } else {
+                      localStorage.setItem('isHeadless', 'yes')
+                    }
+                  }}
+                >
+                  显示浏览器
+                </Checkbox>
+              </div>
+            </Space.Compact>
+          </Form.Item>
+          <Form.Item label='添加课程' style={{ marginBottom: '1rem' }}>
+            <Space.Compact block>
+              <Form.Item noStyle name='_type'>
+                <Select
+                  placeholder='课程类型'
+                  options={[
+                    { label: '选公共选修课', value: 'public' },
+                    { label: '按开课计划选课', value: 'major' },
+                  ]}
+                />
+              </Form.Item>
+              <Form.Item noStyle name='_courseID'>
+                <Input
+                  placeholder='课程代码, 例如 GE610088771' 
+                  autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
+                />
+              </Form.Item>
+              <Form.Item noStyle name='_classID'>
+                <Input 
+                  placeholder='上课班号, 例如 01' 
+                  autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
+                />
+              </Form.Item>
+              <Button 
+                type='primary' 
+                className='border-gray-300 border-l-gray-200'
+                icon={<PlusOutlined />} 
+                onClick={() => {
                   const courseID = form.getFieldValue('_courseID')
                   const classID = form.getFieldValue('_classID')
                   const type = form.getFieldValue('_type')
@@ -341,30 +357,31 @@ export function Content() {
                   } else {
                     Dialog('error', '请输入课程类别、课程代码、上课班号')
                   }
-                }} />
-              </Space.Compact>
-            </Form.Item>
+                }} 
+              />
+            </Space.Compact>
+          </Form.Item>
 
-            <div className='mb-4 flex flex-wrap items-center justify-center text-nowrap gap-2'>
-            {
-              courses.length > 0 ? courses.map((course, index) => (
-                <div key={index} className='flex items-center justify-center gap-2 border flex-nowrap text-xs py-1 px-2 rounded-full'>
-                  <p>{course.type === 'public' ? '选公共选修课' : '按开课计划选课'} | {course.courseID} | {course.classID}</p>
-                  <CloseOutlined onClick={() => {
-                    setCourses(prev => prev.filter((_, i) => i !== index))
-                  }} className='cursor-pointer' />
-                </div>
-              )) : <p className='text-sm'>请添加课程</p>
-            }
-            </div>
+          <div className='mb-4 flex flex-wrap items-center justify-center text-nowrap gap-2'>
+          {
+            courses.length > 0 ? courses.map((course, index) => (
+              <div key={index} className='flex items-center justify-center gap-2 border flex-nowrap text-xs py-1 px-2 rounded-full'>
+                <p>{course.type === 'public' ? '选公共选修课' : '按开课计划选课'} | {course.courseID} | {course.classID}</p>
+                <CloseOutlined onClick={() => {
+                  setCourses(prev => prev.filter((_, i) => i !== index))
+                }} className='cursor-pointer' />
+              </div>
+            )) : <p className='text-sm'>请添加课程</p>
+          }
+          </div>
 
-            <Button
-              type='default'
-              htmlType='submit'
-              block
-            >
-              开始
-            </Button>
+          <Button
+            type='default'
+            htmlType='submit'
+            block
+          >
+            开始
+          </Button>
         </Form>
       </div>
 
