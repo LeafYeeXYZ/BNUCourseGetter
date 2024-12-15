@@ -11,6 +11,7 @@ export function Footer() {
         本软件开源免费, 使用前请在 
       </span>
       <a
+        id='github'
         className='px-1'
         style={{ cursor: 'pointer' }}
         onClick={e => {

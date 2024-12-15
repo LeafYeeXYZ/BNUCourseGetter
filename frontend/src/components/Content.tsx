@@ -198,6 +198,7 @@ export function Content() {
     >
       <div className='w-full flex flex-col items-center justify-center overflow-auto py-4'>
         <Form
+          id='form'
           form={form}
           className='w-full max-w-lg py-4'
           disabled={disabled}
@@ -215,13 +216,14 @@ export function Content() {
           }}
         >
           <Form.Item label='抢课模式' required style={{ marginBottom: '1rem' }}>
-            <Space.Compact block>
+            <Space.Compact id='catch-mode' block>
               <Form.Item
                 name='mode'
                 noStyle
                 rules={[{ required: true, message: '请选择抢课模式' }]}
               >
                 <Radio.Group
+                  id='catch-mode-select'
                   className='w-full'
                   block
                   options={[
@@ -235,6 +237,7 @@ export function Content() {
               </Form.Item>
               <div className='flex items-center justify-center border rounded-e-md border-[#d9d9d9] pl-3 pr-1'>
                 <Checkbox
+                  id='protect-select'
                   className='text-nowrap'
                   defaultChecked={localStorage.getItem('isProtect') === 'yes'}
                   onChange={e => {
@@ -257,17 +260,18 @@ export function Content() {
                 noStyle
                 rules={[{ required: true, message: '请输入学号' }]}
               >
-                <Input style={{ width: '50%' }} placeholder='请输入学号' />
+                <Input id='student-id' style={{ width: '50%' }} placeholder='请输入学号' />
               </Form.Item>
               <Form.Item
                 name='password'
                 noStyle
                 rules={[{ required: true, message: '请输入密码' }]}
               >
-                <Input.Password style={{ width: '50%' }} placeholder='请输入密码' />
+                <Input.Password id='student-password' style={{ width: '50%' }} placeholder='请输入密码' />
               </Form.Item>
               <div className='flex items-center justify-center border rounded-e-md border-[#d9d9d9] pl-3 pr-1'>
                 <Checkbox
+                  id='remember-password'
                   className='text-nowrap'
                   defaultChecked={localStorage.getItem('isRemember') === 'yes'}
                   onChange={e => {
@@ -295,6 +299,7 @@ export function Content() {
                 rules={[{ required: true, message: '请选择刷新频率' }]}
               >
                 <Select
+                  id='refresh-select'
                   options={[ // 刷新频率
                     { label: '每半秒', value: 500 },
                     { label: '每秒(推荐)', value: 1000 },
@@ -305,6 +310,7 @@ export function Content() {
               </Form.Item>
               <div className='flex items-center justify-center border rounded-e-md border-[#d9d9d9] pl-3 pr-1'>
                 <Checkbox
+                  id='headless-select'
                   className='text-nowrap'
                   defaultChecked={localStorage.getItem('isHeadless') === 'no'}
                   onChange={e => {
@@ -321,9 +327,10 @@ export function Content() {
             </Space.Compact>
           </Form.Item>
           <Form.Item label='添加课程' style={{ marginBottom: '1rem' }}>
-            <Space.Compact block>
+            <Space.Compact id='add-courses' block>
               <Form.Item noStyle name='_type'>
                 <Select
+                  id='course-type'
                   placeholder='课程类型'
                   options={[
                     { label: '选公共选修课', value: 'public' },
@@ -333,17 +340,20 @@ export function Content() {
               </Form.Item>
               <Form.Item noStyle name='_courseID'>
                 <Input
+                  id='course-id'
                   placeholder='课程代码, 例如 GE610088771' 
                   autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
                 />
               </Form.Item>
               <Form.Item noStyle name='_classID'>
                 <Input 
+                  id='class-id'
                   placeholder='上课班号, 例如 01' 
                   autoComplete='off' autoCorrect='off' autoCapitalize='off' spellCheck='false' 
                 />
               </Form.Item>
               <Button 
+                id='add-course'
                 type='primary' 
                 className='border-gray-300 border-l-gray-200'
                 icon={<PlusOutlined />} 
@@ -362,7 +372,10 @@ export function Content() {
             </Space.Compact>
           </Form.Item>
 
-          <div className='mb-4 flex flex-wrap items-center justify-center text-nowrap gap-2'>
+          <div 
+            id='added-courses'
+            className='mb-4 flex flex-wrap items-center justify-center text-nowrap gap-2'
+          >
           {
             courses.length > 0 ? courses.map((course, index) => (
               <div key={index} className='flex items-center justify-center gap-2 border flex-nowrap text-xs py-1 px-2 rounded-full'>
@@ -379,6 +392,7 @@ export function Content() {
             type='default'
             htmlType='submit'
             block
+            id='start-button'
           >
             开始
           </Button>
@@ -387,6 +401,7 @@ export function Content() {
 
       <div className='w-full h-full grid grid-cols-2'>
         <section
+          id='current-status'
           ref={logsRef}
           style={{ borderRight: '1px dashed #fda4af' }}
           className='p-2 border-y bg-[#fffaf9] border-rose-300 border-b-rose-100 border-solid overflow-auto'
@@ -394,6 +409,7 @@ export function Content() {
           {logs.length > 0 ? logs : <p className='w-full h-full flex items-center justify-center text-sm'>此处将显示日志</p>}
         </section>
         <section
+          id='important-status'
           ref={resultsRef}
           className='p-2 border-y bg-[#fffaf9] border-rose-300 border-b-rose-100 border-solid overflow-auto'
         >

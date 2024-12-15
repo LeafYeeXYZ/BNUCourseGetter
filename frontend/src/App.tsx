@@ -1,4 +1,6 @@
 import './tailwind.css'
+import 'driver.js/dist/driver.css'
+import { tutorial } from './libs/driver'
 import { ConfigProvider, type ConfigProviderProps, Button } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { InstallBrowser } from './wailsjs/go/main/App'
@@ -31,7 +33,13 @@ export default function App() {
   // 仅在此处修改浏览器状态
   useEffect(() => {
     InstallBrowser()
-      .then(() => setBrowserStatus('已安装'))
+      .then(() => {
+        setBrowserStatus('已安装')
+        if (localStorage.getItem('tutorial') !== 'done') {
+          tutorial()
+          localStorage.setItem('tutorial', 'done')
+        }
+      })
       .catch(() => setBrowserStatus('安装失败'))
   }, [setBrowserStatus])
   // 仅在此处 (使用事件) 修改系统状态
