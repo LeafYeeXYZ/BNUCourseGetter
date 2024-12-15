@@ -535,7 +535,7 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 	// 如果没到时间, 退出
 	time.Sleep(time.Duration(speed) * time.Millisecond)
 	if disabled, _ := ele.IsDisabled(); disabled {
-		ch <- fmt.Errorf("未到选课时间")
+		ch <- fmt.Errorf("当前时间不是有效的选课时间区段")
 		return
 	} else {
 		err = ele.Click()

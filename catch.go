@@ -156,7 +156,7 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 			for {
 				if count > 10000 { 
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
-					runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
+					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
 					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
 					return
 				}
@@ -190,6 +190,8 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 	for {
 		data := <-errCh
 		if data != nil {
+			runtime.EventsEmit(a.ctx, "currentStatus", data.Error())
+			runtime.EventsEmit(a.ctx, "importantStatus", data.Error())
 			runtime.EventsEmit(a.ctx, "currentStatus", "部分课程抢课失败, 继续抢课中...")
 		}
 		count++
@@ -352,7 +354,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			for {
 				if count > 10000 { 
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
-					runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
+					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
 					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
 					return
 				}
@@ -398,7 +400,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			for {
 				if count > 10000 { 
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
-					runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
+					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
 					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
 					return
 				}
@@ -406,7 +408,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 					// 检查是否可选人数为 0
 					if text, _ := ele.InnerText(); text == "0" {
 						runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID))
-						runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID))
+						// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID)) 在错误处理时发出
 						errCh <- fmt.Errorf("课程 %s 可选人数为零", courseID)
 						return
 					} else {
@@ -446,6 +448,8 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 	for {
 		data := <-errCh
 		if data != nil {
+			runtime.EventsEmit(a.ctx, "currentStatus", data.Error())
+			runtime.EventsEmit(a.ctx, "importantStatus", data.Error())
 			runtime.EventsEmit(a.ctx, "currentStatus", "部分课程抢课失败, 继续抢课中...")
 		}
 		count++

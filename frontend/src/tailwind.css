@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply rounded-lg overflow-hidden; }
+* {
+  @apply text-rose-950;
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+.header-btn {
+  @apply text-sm flex items-center justify-center h-full w-full border-none outline-none hover:bg-rose-100;
+}

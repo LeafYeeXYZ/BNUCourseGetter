@@ -1,100 +1,107 @@
-import './styles/App.css'
-import { ConfigProvider } from 'antd'
-import { AntdConfig } from './libs/antd'
-import {
-  LoadingOutlined,
-  CloseOutlined,
-  CheckOutlined,
-} from '@ant-design/icons'
-
+import './tailwind.css'
+import 'driver.js/dist/driver.css'
+import { tutorial } from './libs/driver'
+import { ConfigProvider, type ConfigProviderProps, Button } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
 import { InstallBrowser } from './wailsjs/go/main/App'
-import { EventsEmit, EventsOn, EventsOff } from './wailsjs/runtime/runtime'
-import { useState, useEffect } from 'react'
-
+import { EventsEmit, EventsOn, EventsOff, WindowReload } from './wailsjs/runtime/runtime'
+import { useEffect } from 'react'
+import { useZustand } from './libs/useZustand'
 import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { Content } from './components/Content'
+import type { SystemStatus } from './libs/types'
 
-export type BrowserStatus = {
-  status: '安装中' | '已安装' | '安装失败'
-  icon: React.JSX.Element
+const AntdConfig: ConfigProviderProps = {
+  theme: {
+    token: {
+      colorPrimary: '#ffd0d0',
+      colorText: '#300000',
+    },
+  },
 }
 
-export type SystemStatus = '加载中' | '空闲' | '抢课中' | '蹲课中'
-export type CurrentStatus = React.JSX.Element[]
+export default function App() {
 
-function App() {
-
+  const { setBrowserStatus, setSystemStatus, setCurrentStatus, setImportantStatus, browserStatus } = useZustand()
   // 阻止双击, 选中文字, 右键菜单等默认事件
   useEffect(() => {
     document.addEventListener('contextmenu', e => e.preventDefault())
     document.addEventListener('selectstart', e => e.preventDefault())
     document.addEventListener('dblclick', e => e.preventDefault())
   }, [])
-
-  // 是否安装了 chromium, 仅在此处修改状态!!!
-  const [browserStatus, setBrowserStatus] = useState<BrowserStatus>({ status: '安装中', icon: <LoadingOutlined /> })
-  // 安装浏览器
+  // 仅在此处修改浏览器状态
   useEffect(() => {
     InstallBrowser()
-      .then(() => setBrowserStatus({ status: '已安装', icon: <CheckOutlined /> }))
-      .catch(() => setBrowserStatus({ status: '安装失败', icon: <CloseOutlined /> }))
-  }, [])
-
-  // 用于标识系统状态的 state 和 event, 仅使用事件修改状态!!!
-  const [systemStatus, setSystemStatus] = useState<SystemStatus>('加载中')
+      .then(() => {
+        setBrowserStatus('已安装')
+        if (localStorage.getItem('tutorial') !== 'done') {
+          tutorial()
+          localStorage.setItem('tutorial', 'done')
+        }
+      })
+      .catch(() => setBrowserStatus('安装失败'))
+  }, [setBrowserStatus])
+  // 仅在此处 (使用事件) 修改系统状态
   useEffect(() => {
     EventsOn('systemStatus', (status: SystemStatus) => setSystemStatus(status))
     EventsEmit('systemStatus', '空闲')
     return () => EventsOff('systemStatus')
-  }, [])
-  
-  // 用于标识当前输出的 state 和 event, 仅使用事件修改状态!!!
-  const [currentStatus, setCurrentStatus] = useState<CurrentStatus>([<span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;开始加载</span>])
+  }, [setSystemStatus])
+  // 仅在此处 (使用事件) 修改当前状态
   useEffect(() => {
     EventsOn('currentStatus', (status: string) => {
       // 最多同时保留 500 条记录
-      setCurrentStatus(prev => [...prev.slice(-499), <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>])
+      setCurrentStatus(prev => [...prev.slice(-499), `${new Date().toLocaleTimeString()}  ${status}`])
     })
-    EventsEmit('currentStatus', '系统已启动 (此处将展示日志)')
     return () => EventsOff('currentStatus')
-  }, [])
-
-  // 重要事件的 state 和 event, 仅使用事件修改状态!!!
-  const [importantStatus, setImportantStatus] = useState<CurrentStatus>([<span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;开始加载</span>])
+  }, [setCurrentStatus])
+  // 仅在此处 (使用事件) 修改重要状态
   useEffect(() => {
     EventsOn('importantStatus', (status: string) => {
       // 最多同时保留 100 条记录
-      setImportantStatus(prev => [...prev.slice(-99), <span>{new Date().toLocaleTimeString()}&nbsp;&nbsp;{status}</span>])
+      setImportantStatus(prev => [...prev.slice(-99), `${new Date().toLocaleTimeString()}  ${status}`])
     })
-    EventsEmit('importantStatus', '系统已启动 (此处将展示结果)')
     return () => EventsOff('importantStatus')
-  }, [])
+  }, [setImportantStatus])
 
   return (
-    <main id="container">
-
-      <ConfigProvider {...AntdConfig}>
-
-        <Header 
-          systemStatus={systemStatus}
-        />
-
-        <Content 
-          browserStatus={browserStatus}
-          systemStatus={systemStatus}
-          currentStatus={currentStatus}
-          importantStatus={importantStatus}
-        />
-
-        <Footer 
-          browserStatus={browserStatus}
-        />
-
-      </ConfigProvider>
-
+    <ConfigProvider {...AntdConfig}>
+    <main 
+      className='grid grid-rows-[40px,1fr,25px] w-dvvw h-dvh overflow-hidden rounded-xl bg-white'
+    >
+      <Header />
+      {browserStatus === '已安装' ? (
+        <Content />
+      ) : browserStatus === '安装失败' ? (
+        <div className='flex flex-col items-center justify-center'>
+          <p className='font-bold mb-6'>
+            浏览器安装失败, 请确保网络连接正常并点击下方按钮重试
+          </p>
+          <Button
+            className='border-rose-950'
+            onClick={() => {
+              WindowReload()
+            }}
+          >
+            重启应用
+          </Button>
+        </div>
+      ) : (
+        <div className='flex flex-col items-center justify-center'>
+          <p className='text-xl font-bold'>
+            <LoadingOutlined className='mr-1 mb-6' /> 加载中
+          </p>
+          <p className='text-xs opacity-75 mb-1'>
+            首次启动时需要在线下载浏览器, 请耐心等待
+          </p>
+          <p className='text-xs opacity-75'>
+            如果长时间无响应, 请检查网络连接并重启应用
+          </p>
+        </div>
+      )}
+      <Footer />
     </main>
+    </ConfigProvider>
   )
 }
-
-export default App
