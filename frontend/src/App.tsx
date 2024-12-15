@@ -1,7 +1,8 @@
 import './tailwind.css'
-import { ConfigProvider, type ConfigProviderProps } from 'antd'
+import { ConfigProvider, type ConfigProviderProps, Button } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
 import { InstallBrowser } from './wailsjs/go/main/App'
-import { EventsEmit, EventsOn, EventsOff } from './wailsjs/runtime/runtime'
+import { EventsEmit, EventsOn, EventsOff, WindowReload } from './wailsjs/runtime/runtime'
 import { useEffect } from 'react'
 import { useZustand } from './libs/useZustand'
 import { Header } from './components/Header'
@@ -20,7 +21,7 @@ const AntdConfig: ConfigProviderProps = {
 
 export default function App() {
 
-  const { setBrowserStatus, setSystemStatus, setCurrentStatus, setImportantStatus } = useZustand()
+  const { setBrowserStatus, setSystemStatus, setCurrentStatus, setImportantStatus, browserStatus } = useZustand()
   // 阻止双击, 选中文字, 右键菜单等默认事件
   useEffect(() => {
     document.addEventListener('contextmenu', e => e.preventDefault())
@@ -64,7 +65,35 @@ export default function App() {
       className='grid grid-rows-[40px,1fr,25px] w-dvvw h-dvh overflow-hidden rounded-xl bg-white'
     >
       <Header />
-      <Content />
+      {browserStatus === '已安装' ? (
+        <Content />
+      ) : browserStatus === '安装失败' ? (
+        <div className='flex flex-col items-center justify-center'>
+          <p className='font-bold mb-6'>
+            浏览器安装失败, 请确保网络连接正常并点击下方按钮重试
+          </p>
+          <Button
+            className='border-rose-950'
+            onClick={() => {
+              WindowReload()
+            }}
+          >
+            重启应用
+          </Button>
+        </div>
+      ) : (
+        <div className='flex flex-col items-center justify-center'>
+          <p className='text-xl font-bold'>
+            <LoadingOutlined className='mr-1 mb-6' /> 加载中
+          </p>
+          <p className='text-xs opacity-75 mb-1'>
+            首次启动时需要在线下载浏览器, 请耐心等待
+          </p>
+          <p className='text-xs opacity-75'>
+            如果长时间无响应, 请检查网络连接并重启应用
+          </p>
+        </div>
+      )}
       <Footer />
     </main>
     </ConfigProvider>

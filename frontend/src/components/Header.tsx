@@ -7,7 +7,7 @@ import {
 } from '../wailsjs/runtime/runtime'
 import { Dialog } from '../wailsjs/go/main/App'
 import { useZustand } from '../libs/useZustand'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Tag } from 'antd'
 import { 
   CloseOutlined,
@@ -16,8 +16,6 @@ import {
   RedoOutlined,
   PushpinOutlined,
   PushpinFilled,
-  LoadingOutlined,
-  CheckOutlined,
 } from '@ant-design/icons'
 
 export function Header() {
@@ -26,17 +24,7 @@ export function Header() {
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState<boolean>(false)
   useEffect(() => setIsAlwaysOnTop(localStorage.getItem('isAlwaysOnTop') === 'true'), [])
   // 系统状态
-  const { systemStatus, browserStatus } = useZustand()
-  const icon = useMemo(() => {
-    switch (browserStatus) {
-      case '已安装':
-        return <CheckOutlined />
-      case '安装中':
-        return <LoadingOutlined />
-      default:
-        return <CloseOutlined />
-    }
-  }, [browserStatus])
+  const { systemStatus } = useZustand()
 
   return (
     <header 
@@ -52,7 +40,6 @@ export function Header() {
       >
         <span className='font-bold'>小鸦抢课</span>
         <Tag className='m-0 border-rose-950 bg-white leading-none py-[0.15rem] px-[0.3rem]'>2.0.0</Tag>
-        <Tag className='m-0 border-rose-950 bg-white leading-none py-[0.15rem] px-[0.3rem]'>浏览器: {browserStatus} {icon}</Tag>
         <Tag className='m-0 border-rose-950 bg-white leading-none py-[0.15rem] px-[0.3rem]'>{systemStatus}</Tag>
       </p>
       <button
