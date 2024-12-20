@@ -154,7 +154,7 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 			ele = iiframe.Locator("#tr0_xz a")
 			count := 0
 			for {
-				if count > 10000 { 
+				if count > 15000 { 
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
 					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
 					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
@@ -352,7 +352,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			ele = iiiiframe.Locator("#tr0_operation a")
 			count := 0
 			for {
-				if count > 10000 { 
+				if count > 15000 { 
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
 					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
 					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
@@ -398,7 +398,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			ele = iiiframe.Locator("#tr0_kxrs")
 			count = 0
 			for {
-				if count > 10000 { 
+				if count > 15000 { 
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
 					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
 					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
