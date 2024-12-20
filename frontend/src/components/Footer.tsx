@@ -8,7 +8,7 @@ export function Footer() {
       className='w-full h-full bg-rose-50 flex items-center justify-center text-xs font-bold'
     >
       <span>
-        本软件开源免费, 使用前请在 
+        本软件开源免费, 使用前请阅读使用说明并在 
       </span>
       <a
         id='github'
@@ -22,7 +22,7 @@ export function Footer() {
         Github <ExportOutlined />
       </a>
       <span>
-        上阅读使用说明并下载最新版本
+        上下载最新版本
       </span>
     </footer>
   )
