@@ -472,7 +472,6 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 		runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("请手动确认课程 %s 选课结果", courseID))
 		runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 页面出现 %s 弹窗: %s", courseID, dialog.Type(), dialog.Message()))
 		runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("请手动确认课程 %s 选课结果", courseID))
-		dialog.Accept()
 	})
 
 	if *isClose {
