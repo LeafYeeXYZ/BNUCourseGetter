@@ -28,6 +28,7 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(headless),
+		SlowMo: playwright.Float(30),
 	})
 	if err != nil { return err }
 	defer browser.Close()
@@ -50,6 +51,10 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 
 			// 浏览器出现 confirm 时, 点击 "确定"
 			page.On("dialog", func(dialog playwright.Dialog) {
+				runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 页面出现 %s 弹窗: %s", courseID, dialog.Type(), dialog.Message()))
+				runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("已自动确认弹窗, 请手动确认课程 %s 选课结果", courseID))
+				runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 页面出现 %s 弹窗: %s", courseID, dialog.Type(), dialog.Message()))
+				runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("已自动确认弹窗, 请手动确认课程 %s 选课结果", courseID))
 				dialog.Accept()
 			})
 
@@ -224,6 +229,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 	// 创建浏览器实例
 	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(headless),
+		SlowMo: playwright.Float(30),
 	})
 	if err != nil { return err }
 	defer browser.Close()
@@ -247,9 +253,10 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			// 专业课特殊处理
 			page.On("dialog", func(dialog playwright.Dialog) {
 				runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 页面出现 %s 弹窗: %s", courseID, dialog.Type(), dialog.Message()))
-				runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("请手动确认课程 %s 选课结果", courseID))
+				runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("已自动确认弹窗, 请手动确认课程 %s 选课结果", courseID))
 				runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 页面出现 %s 弹窗: %s", courseID, dialog.Type(), dialog.Message()))
-				runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("请手动确认课程 %s 选课结果", courseID))
+				runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("已自动确认弹窗, 请手动确认课程 %s 选课结果", courseID))
+				dialog.Accept()
 			})
 
 			// 跳转到登录页面

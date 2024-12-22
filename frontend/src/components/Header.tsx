@@ -41,7 +41,7 @@ export function Header() {
         className='w-full h-full flex items-center justify-start text-sm gap-2 pl-3'
       >
         <span className='font-bold' data-tg-tour='测试'>小鸦抢课</span>
-        <Tag id='version' className='m-0 border-rose-950 bg-white leading-none py-[0.15rem] px-[0.3rem]'>2.0.2</Tag>
+        <Tag id='version' className='m-0 border-rose-950 bg-white leading-none py-[0.15rem] px-[0.3rem]'>2.0.3</Tag>
         <Tag id='status' className='m-0 border-rose-950 bg-white leading-none py-[0.15rem] px-[0.3rem]'>{systemStatus}</Tag>
       </p>
       <button
