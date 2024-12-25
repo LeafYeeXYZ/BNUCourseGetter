@@ -388,42 +388,36 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			iiframe := page.Frames()[2]
 			iiiframe := iiframe.FrameLocator("#frmReport")
 
-			// 输入班号
-			ele = iiframe.Locator("#txt_skbjdm")
-			err = ele.Fill(classID)
-			if err != nil { errCh <- err; return }
-
-			// 点击 "检索"
-			ele = iiframe.Locator("#btnQry")
-			err = ele.Click()
-			if err != nil { errCh <- err; return }
+			// ------ 2024.12.25 ------
+			// 不再通过输入班号来检索课程, 而是直接依次检索 DOM
+			// ------------------------
 
 			// 等待加载
 			iiframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
 				State: playwright.LoadStateNetworkidle,
 			})
-			time.Sleep(time.Duration(speed) * time.Millisecond)
-
-			// 可选人数
-			ele = iiiframe.Locator("#tr0_kxrs")
+			
+			// 检索课程
+			eleIndex := 0
 			count = 0
 			for {
-				if count > 15000 { 
-					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
-					// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
-					errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
-					return
-				}
+				// 班号
+				ele = iiiframe.Locator(fmt.Sprintf("#tr%d_curent_skbjdm", eleIndex))
 				if exists, _ := ele.IsVisible(); exists {
-					// 检查是否可选人数为 0
+					// 如果不是给定的班号, 则继续检索
+					if text, _ := ele.InnerText(); text != classID {
+						eleIndex++
+						continue
+					}
+					// 如果是给定的班号, 则检查是否可选人数为 0
+					ele = iiiframe.Locator(fmt.Sprintf("#tr%d_kxrs", eleIndex))
 					if text, _ := ele.InnerText(); text == "0" {
 						runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID))
-						// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID)) 在错误处理时发出
 						errCh <- fmt.Errorf("课程 %s 可选人数为零", courseID)
 						return
 					} else {
-					  // 勾选
-						ele = iiiframe.Locator("#tr0_ischk input")
+						// 勾选
+						ele = iiiframe.Locator(fmt.Sprintf("#tr%d_ischk input", eleIndex))
 						err = ele.Click()
 						if err != nil { errCh <- err; return }
 						break
@@ -432,8 +426,60 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 					runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("等待检索课程 %s 结果...", courseID))
 					time.Sleep(time.Duration(speed) * time.Millisecond)
 					count += speed
+					if count > 15000 { 
+						runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时", courseID))
+						errCh <- fmt.Errorf("课程 %s 网络超时", courseID)
+						return
+					}
 				}
 			}
+
+			// // 输入班号
+			// ele = iiframe.Locator("#txt_skbjdm")
+			// err = ele.Fill(classID)
+			// if err != nil { errCh <- err; return }
+
+			// // 点击 "检索"
+			// ele = iiframe.Locator("#btnQry")
+			// err = ele.Click()
+			// if err != nil { errCh <- err; return }
+
+			// // 等待加载
+			// iiframe.WaitForLoadState(playwright.FrameWaitForLoadStateOptions{
+			// 	State: playwright.LoadStateNetworkidle,
+			// })
+			// time.Sleep(time.Duration(speed) * time.Millisecond)
+
+			// // 可选人数
+			// ele = iiiframe.Locator("#tr0_kxrs")
+			// count = 0
+			// for {
+			// 	if count > 15000 { 
+			// 		runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID))
+			// 		// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 网络超时或可选人数为零", courseID)) 在错误处理时发出
+			// 		errCh <- fmt.Errorf("课程 %s 网络超时或可选人数为零", courseID)
+			// 		return
+			// 	}
+			// 	if exists, _ := ele.IsVisible(); exists {
+			// 		// 检查是否可选人数为 0
+			// 		if text, _ := ele.InnerText(); text == "0" {
+			// 			runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID))
+			// 			// runtime.EventsEmit(a.ctx, "importantStatus", fmt.Sprintf("课程 %s 可选人数为零", courseID)) 在错误处理时发出
+			// 			errCh <- fmt.Errorf("课程 %s 可选人数为零", courseID)
+			// 			return
+			// 		} else {
+			// 		  // 勾选
+			// 			ele = iiiframe.Locator("#tr0_ischk input")
+			// 			err = ele.Click()
+			// 			if err != nil { errCh <- err; return }
+			// 			break
+			// 		}
+			// 	} else {
+			// 		runtime.EventsEmit(a.ctx, "currentStatus", fmt.Sprintf("等待检索课程 %s 结果...", courseID))
+			// 		time.Sleep(time.Duration(speed) * time.Millisecond)
+			// 		count += speed
+			// 	}
+			// }
 
 			// 点击 "确定"
 			ele = iiframe.Locator("#btnSubmit")
