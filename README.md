@@ -56,7 +56,7 @@
 ## 2.1 手动构建方法
 
 1. 安装 `Go`、`Node.js`、`Bun` (请自行前往官网下载安装)
-2. 执行 `go install github.com/wailsapp/wails/cmd/wails@latest` 安装 `Wails`
+2. 执行 `go install github.com/wailsapp/wails/v2/cmd/wails@latest` 安装 `Wails`
 3. 执行 `git clone https://github.com/LeafYeeXYZ/BNUCourseGetter.git` 克隆本项目
 4. 执行 `cd BNUCourseGetter` 进入项目目录
 5. 执行 `wails build` 编译项目
