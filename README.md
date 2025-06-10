@@ -61,3 +61,7 @@
 4. 执行 `cd BNUCourseGetter` 进入项目目录
 5. 执行 `wails build` 编译项目
 6. 在 `build/bin` 目录下找到编译好的二进制文件, 执行即可
+
+# 3 Star History
+
+<iframe style="width:100%;height:auto;min-width:600px;min-height:400px;" src="https://www.star-history.com/embed?secret=Z2l0aHViX3BhdF8xMUJEUFVOSVkwMjJ3MnBJbEFnUnJGXzI5c0FqTW40TVoxakNPYzNpaG1CSmgyR3hMNGxZS3dwVW9Eb3VQT2tWVW5QNkI2TUpaS0lWQ053bXBM#LeafYeeXYZ/BNUCourseGetter&Date" frameBorder="0"></iframe>
