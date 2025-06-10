@@ -64,4 +64,4 @@
 
 # 3 Star History
 
-<iframe style="width:100%;height:auto;min-width:600px;min-height:400px;" src="https://www.star-history.com/embed?secret=Z2l0aHViX3BhdF8xMUJEUFVOSVkwMjJ3MnBJbEFnUnJGXzI5c0FqTW40TVoxakNPYzNpaG1CSmgyR3hMNGxZS3dwVW9Eb3VQT2tWVW5QNkI2TUpaS0lWQ053bXBM#LeafYeeXYZ/BNUCourseGetter&Date" frameBorder="0"></iframe>
+[![Star History Chart](https://api.star-history.com/svg?repos=LeafYeeXYZ/BNUCourseGetter&type=Date)](https://www.star-history.com/#LeafYeeXYZ/BNUCourseGetter&Date)
