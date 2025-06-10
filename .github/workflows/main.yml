@@ -19,16 +19,10 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          # - name: 'windows-amd64'
-          #   platform:  'windows/amd64'
-          #   os: 'windows-latest'
-          # - name: 'windows-arm64'
-          #   platform:  'windows/arm64'
-          #   os: 'windows-latest'
-          # - name: 'mac-amd64'
-          #   platform:  'darwin/amd64'
-          #   os: 'macos-latest'
-          - name: 'Build'
+          - name: 'windows-amd64'
+            platform:  'windows/amd64'
+            os: 'windows-latest'
+          - name: 'mac-arm64'
             platform:  'darwin/arm64'
             os: 'macos-latest'
 
@@ -59,9 +53,10 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Build Wails
-        run: wails build -platform windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
+        run: wails build
 
       - name: Zip Mac Build
+        if: matrix.build.platform == 'darwin/arm64'
         run: zip -r build/bin/小鸦抢课-amd64.app.zip build/bin/小鸦抢课-amd64.app && zip -r build/bin/小鸦抢课-arm64.app.zip build/bin/小鸦抢课-arm64.app
 
       - name: Create Release
