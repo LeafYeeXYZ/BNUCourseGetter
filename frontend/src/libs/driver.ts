@@ -110,7 +110,11 @@ export function tutorial() {
       },
       {
         element: '#course-type',
-        popover: { title: '课程类别', description: '如果你是大一的同学, 一个简单的判断方式是: 你必修的课、专业选修课都不在"选公共选修课"里, 且大多数"选公共选修课"里的课程的上课班号只有"01". 详见 Github' },
+        popover: { title: '课程类别', description: '如果你是大一的同学, 一个简单的判断方式是: 你必修的课、专业选修课都不在"选公共选修课"里, 且大多数"选公共选修课"里的课程的上课班号只有"01"' },
+      },
+      {
+        element: '#course-type',
+        popover: { title: '课程类别', description: '如果实在不确定, 也可即添加"选公共选修课", 也添加"按开课计划选课"; 小鸦抢课会各开启一个页面, 在相应位置尝试抢课' },
       },
       {
         element: '#course-id',
