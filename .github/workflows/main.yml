@@ -57,18 +57,18 @@ jobs:
 
       - name: Zip Mac Build
         if: matrix.build.platform == 'darwin/arm64'
-        run: zip -r build/bin/小鸦抢课-amd64.app.zip build/bin/小鸦抢课-amd64.app && zip -r build/bin/小鸦抢课-arm64.app.zip build/bin/小鸦抢课-arm64.app
+        run: zip -r build/bin/xyqk-mac-arm64.app.zip build/bin/小鸦抢课.app
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            build/bin/*
-          draft: false
-          prerelease: true
-          
-      # - name: Upload Artifacts
-      #   uses: actions/upload-artifact@v4
+      # - name: Create Release
+      #   uses: softprops/action-gh-release@v2
       #   with:
-      #     name: ${{ matrix.build.name }}
-      #     path: build/bin/*
+      #     files: |
+      #       build/bin/*
+      #     draft: false
+      #     prerelease: true
+          
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.build.name }}
+          path: build/bin/*
