@@ -62,7 +62,7 @@ export function tutorial() {
       },
       {
         element: '#catch-mode',
-        popover: { title: '抢课模式', description: '这里可以选择抢课模式和设置收否开启蹲课保护' },
+        popover: { title: '抢课模式', description: '这里可以选择抢课模式, 以及设置是否开启蹲课保护' },
       },
       {
         element: '#catch-mode-select',
@@ -99,6 +99,10 @@ export function tutorial() {
       {
         element: '#refresh-select',
         popover: { title: '刷新频率', description: '这里可以设置网页的刷新频率, 并不是越快越好, 一般默认的 1 秒即可, 如果想要减少耗电量, 也可以选择 2 秒或 5 秒' },
+      },
+      {
+        element: '#network-select',
+        popover: { title: '网络环境', description: '一般情况下, 你应该连接校园网进行抢课/蹲课, 这样网络最稳定; 但如果您因故无法连接校园网, 小鸦抢课也可以使用 WebVPN 模式进入数字京师' },
       },
       {
         element: '#headless-select',
@@ -142,11 +146,11 @@ export function tutorial() {
       },
       {
         element: undefined,
-        popover: { title: '重要提示', description: '2: 请确认各项信息填写正确、无课程时间冲突、剩余学分足够、使用校园网、网络流畅 (建议去人少的地方抢课)' },
+        popover: { title: '重要提示', description: '2: 请确认各项信息填写正确、无课程时间冲突、剩余学分足够、尽量使用校园网 (或使用 WebVPN 模式)、网络流畅 (建议去人少的地方抢课)' },
       },
       {
         element: undefined,
-        popover: { title: '重要提示', description: '3: 抢课和蹲课的成功率都不是百分之百, 请在软件提示结束或成功后手动二次确认选课结果. 同时, 千万不要将本软件作为唯一的选课手段' },
+        popover: { title: '重要提示', description: '3: 抢课和蹲课的成功率都不是百分之百, 请在软件提示结束或成功后手动二次确认选课结果. 同时, 千万千万千万不要将本软件作为唯一的选课手段' },
       },
       {
         element: undefined,

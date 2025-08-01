@@ -9,7 +9,15 @@ import (
 )
 
 // 抢课模式主函数
-func (a *App) CatchCoursePub(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+func (a *App) CatchCoursePub(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool,
+	useWebVpn bool,
+) error {
 
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始抢课")
 
@@ -37,7 +45,7 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 	errCh := make(chan error, 1)
 
 	// 为每个课程创建一个协程
-	for i := 0; i < len(courseID); i++ {
+	for i := range courseID {
 		go func(speed int, studentID string, password string, courseID string, classID string) {
 			// 当前元素
 			var ele playwright.Locator
@@ -59,8 +67,13 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 			})
 
 			// 跳转到登录页面
-			_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
-			if err != nil { errCh <- err; return }
+			if useWebVpn {
+				_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
+				if err != nil { errCh <- err; return }
+			} else {
+				_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
+				if err != nil { errCh <- err; return }
+			}
 
 			// 输入学号
 			ele = page.Locator("#un")
@@ -87,6 +100,40 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 			if exists, _ := ele.IsVisible(); exists {
 				err = ele.Click()
 				if err != nil { errCh <- err; return }
+			}
+
+			// 如果是 Web VPN 模式, 则点击 "教务管理系统"
+			if (useWebVpn) {
+				// 监听新页面的创建
+				var newPage playwright.Page
+				page.Context().On("page", func(p playwright.Page) {
+					newPage = p
+				})
+				// 点击 "教务管理系统"
+				page.Evaluate(`() => {
+					const items = document.querySelectorAll('.ml_item_name')
+					for (const item of items) {
+						if (item.textContent?.includes('教务管理系统')) {
+							item.parentElement?.click()
+							break
+						}
+					}
+				}`)
+				// 等待加载
+				page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
+				// 等待新页面创建
+				time.Sleep(1 * time.Second)
+				// 使用新页面
+				if newPage == nil {
+					errCh <- fmt.Errorf("未能成功打开教务管理系统页面")
+					return
+				}
+				page = newPage
+				page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
 			}
 
 			// 点击 "网上选课"
@@ -121,6 +168,7 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 					err = ele.Click()
 					if err != nil { errCh <- err; return }
 					// 等待加载
+					time.Sleep(time.Duration(speed) * time.Millisecond)
 					page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 						State: playwright.LoadStateNetworkidle,
 					})
@@ -210,7 +258,15 @@ func (a *App) CatchCoursePub(speed int, studentID string, password string, cours
 	return nil
 }
 
-func (a *App) CatchCourseMaj(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+func (a *App) CatchCourseMaj(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool,
+	useWebVpn bool,
+) error {
 
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始抢课")
 
@@ -238,7 +294,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 	errCh := make(chan error, 1)
 
 	// 为每个课程创建一个协程
-	for i := 0; i < len(courseID); i++ {
+	for i := range courseID {
 		go func(speed int, studentID string, password string, courseID string, classID string) {
 			// 当前元素
 			var ele playwright.Locator
@@ -260,8 +316,13 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			})
 
 			// 跳转到登录页面
-			_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
-			if err != nil { errCh <- err; return }
+			if useWebVpn {
+				_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
+				if err != nil { errCh <- err; return }
+			} else {
+				_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
+				if err != nil { errCh <- err; return }
+			}
 
 			// 输入学号
 			ele = page.Locator("#un")
@@ -288,6 +349,40 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 			if exists, _ := ele.IsVisible(); exists {
 				err = ele.Click()
 				if err != nil { errCh <- err; return }
+			}
+
+			// 如果是 Web VPN 模式, 则点击 "教务管理系统"
+			if (useWebVpn) {
+				// 监听新页面的创建
+				var newPage playwright.Page
+				page.Context().On("page", func(p playwright.Page) {
+					newPage = p
+				})
+				// 点击 "教务管理系统"
+				page.Evaluate(`() => {
+					const items = document.querySelectorAll('.ml_item_name')
+					for (const item of items) {
+						if (item.textContent?.includes('教务管理系统')) {
+							item.parentElement?.click()
+							break
+						}
+					}
+				}`)
+				// 等待加载
+				page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
+				// 等待新页面创建
+				time.Sleep(1 * time.Second)
+				// 使用新页面
+				if newPage == nil {
+					errCh <- fmt.Errorf("未能成功打开教务管理系统页面")
+					return
+				}
+				page = newPage
+				page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
 			}
 
 			// 点击 "网上选课"
@@ -322,6 +417,7 @@ func (a *App) CatchCourseMaj(speed int, studentID string, password string, cours
 					err = ele.Click()
 					if err != nil { errCh <- err; return }
 					// 等待加载
+					time.Sleep(time.Duration(speed) * time.Millisecond)
 					page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 						State: playwright.LoadStateNetworkidle,
 					})

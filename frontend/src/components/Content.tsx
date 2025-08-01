@@ -26,6 +26,7 @@ type FormValues = {
   speed: number // 存在 localStorage
   studentID: string // 存在 localStorage
   password: string // 存在 localStorage (如果记住密码)
+  network: 'webvpn' | 'intranet' // 存在 localStorage
   courses: { 
     courseID: string, 
     classID: string,
@@ -110,14 +111,15 @@ export function Content() {
       } else if (value.mode === 'WatchCourseSync') {
         EventsEmit('systemStatus', '单线程蹲课中')
       }
+
       // 抢课函数
       if ((value.mode === 'WatchCourseSync' || value.mode === 'WatchCourse') && localStorage.getItem('isProtect') === 'yes') {
         // 蹲课保护: Promise 被拒绝时, 会自动重试
-        const autoRetry = async (func: typeof WatchCoursePub | typeof WatchCoursePubSync | typeof WatchCourseMaj | typeof WatchCourseMajSync, speed: number, studentID: string, password: string, courseID: string[], classID: string[], isHeadless: boolean) => {
+        const autoRetry = async (func: typeof WatchCoursePub | typeof WatchCoursePubSync | typeof WatchCourseMaj | typeof WatchCourseMajSync, speed: number, studentID: string, password: string, courseID: string[], classID: string[], isHeadless: boolean, useWebVpn: boolean) => {
           // eslint-disable-next-line no-constant-condition
           while (true) {
             try {
-              await func(speed, studentID, password, courseID, classID, isHeadless)
+              await func(speed, studentID, password, courseID, classID, isHeadless, useWebVpn)
               break
             } catch (err) {
               EventsEmit('currentStatus', `检测到发生错误: ${err}`)
@@ -128,8 +130,8 @@ export function Content() {
         // 开始蹲课保护
         if (publicCourses.length > 0 && majorCourses.length > 0) {
           const res = await Promise.allSettled([
-            autoRetry(funcs.public[value.mode], value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
-            autoRetry(funcs.major[value.mode], value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
+            autoRetry(funcs.public[value.mode], value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn'),
+            autoRetry(funcs.major[value.mode], value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn'),
           ])
           res.forEach((res) => {
             if (res.status === 'rejected') {
@@ -139,16 +141,16 @@ export function Content() {
           })
           return
         } else if (publicCourses.length > 0) {
-          await autoRetry(funcs.public[value.mode], value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+          await autoRetry(funcs.public[value.mode], value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn')
         } else if (majorCourses.length > 0) {
-          await autoRetry(funcs.major[value.mode], value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+          await autoRetry(funcs.major[value.mode], value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn')
         }
       } else {
         // 关闭蹲课保护或抢课
         if (publicCourses.length > 0 && majorCourses.length > 0) {
           const res = await Promise.allSettled([
-            funcs.public[value.mode](value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
-            funcs.major[value.mode](value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no'),
+            funcs.public[value.mode](value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn'),
+            funcs.major[value.mode](value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn'),
           ])
           res.forEach((res) => {
             if (res.status === 'rejected') {
@@ -158,9 +160,9 @@ export function Content() {
           })
           return
         } else if (publicCourses.length > 0) {
-          await funcs.public[value.mode](value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+          await funcs.public[value.mode](value.speed, value.studentID, value.password, publicCourses.map(course => course.courseID), publicCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn')
         } else if (majorCourses.length > 0) {
-          await funcs.major[value.mode](value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no')
+          await funcs.major[value.mode](value.speed, value.studentID, value.password, majorCourses.map(course => course.courseID), majorCourses.map(course => course.classID), localStorage.getItem('isHeadless') !== 'no', localStorage.getItem('network') === 'webvpn')
         }
       }
     } catch (err) {
@@ -210,6 +212,7 @@ export function Content() {
             courseType: localStorage.getItem('courseType') || 'public',
             studentID: localStorage.getItem('studentID') || '',
             password: localStorage.getItem('password') || '',
+            network: localStorage.getItem('network') || 'intranet',
           }}
           onFinish={async value => {
             await handleSubmit(browserStatus, systemStatus, { ...value, courses })
@@ -305,6 +308,22 @@ export function Content() {
                     { label: '每秒(推荐)', value: 1000 },
                     { label: '每两秒', value: 2000 },
                     { label: '每五秒', value: 5000 },
+                  ]}
+                />
+              </Form.Item>
+              <div className='text-nowrap bg-gray-100 border border-[#d9d9d9] border-e-0 px-3 flex items-center justify-center'>
+                网络环境
+              </div>
+              <Form.Item
+                noStyle
+                name='network'
+                rules={[{ required: true, message: '请选择网络环境' }]}
+              >
+                <Select
+                  id='network-select'
+                  options={[
+                    { label: '校园网', value: 'intranet' },
+                    { label: 'WebVPN', value: 'webvpn' },
                   ]}
                 />
               </Form.Item>

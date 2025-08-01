@@ -13,12 +13,20 @@ import (
 var refreshTime = 150 * time.Second
 
 // 蹲课模式对外接口
-func (a *App) WatchCoursePub(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+func (a *App) WatchCoursePub(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool,
+	useWebVpn bool,
+) error {
 	var wg sync.WaitGroup
 	var ch = make(chan error, 1)
 	for {
 		wg.Add(1)
-		go a.watchCoursePubCore(speed, studentID, password, courseID, classID, headless, &wg, ch)
+		go a.watchCoursePubCore(speed, studentID, password, courseID, classID, headless, useWebVpn, &wg, ch)
 		wg.Wait()
 		select {
 			case err := <-ch:
@@ -34,12 +42,20 @@ func (a *App) WatchCoursePub(speed int, studentID string, password string, cours
 }
 
 // 单线程蹲课模式对外接口
-func (a *App) WatchCoursePubSync(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+func (a *App) WatchCoursePubSync(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool,
+	useWebVpn bool,
+) error {
 	var wg sync.WaitGroup
 	var ch = make(chan error, 1)
 	for {
 		wg.Add(1)
-		go a.watchCoursePubSyncCore(speed, studentID, password, courseID, classID, headless, &wg, ch)
+		go a.watchCoursePubSyncCore(speed, studentID, password, courseID, classID, headless, useWebVpn, &wg, ch)
 		wg.Wait()
 		select {
 			case err := <-ch:
@@ -55,7 +71,17 @@ func (a *App) WatchCoursePubSync(speed int, studentID string, password string, c
 }
 
 // 蹲课模式主函数
-func (a *App) watchCoursePubCore(speed int, studentID string, password string, courseID []string, classID []string, headless bool, wg *sync.WaitGroup, ch chan error) {
+func (a *App) watchCoursePubCore(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool, 
+	useWebVpn bool,
+	wg *sync.WaitGroup, 
+	ch chan error,
+) {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
 
@@ -86,8 +112,15 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 	errCh := make(chan error, 1)
 
 	// 为每个课程创建一个协程
-	for i := 0; i < len(courseID); i++ {
-		go func(speed int, studentID string, password string, courseID string, classID string) {
+	for i := range courseID {
+		go func(
+			speed int, 
+			studentID string, 
+			password string, 
+			courseID string, 
+			classID string,
+			useWebVpn bool,
+		) {
 			// 当前元素
 			var ele playwright.Locator
 			// 错误
@@ -108,8 +141,13 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 			})
 
 			// 跳转到登录页面
-			_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
-			if err != nil { errCh <- err; return }
+			if useWebVpn {
+				_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
+				if err != nil { errCh <- err; return }
+			} else {
+				_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
+				if err != nil { errCh <- err; return }
+			}
 
 			// 输入学号
 			ele = page.Locator("#un")
@@ -136,6 +174,40 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 			if exists, _ := ele.IsVisible(); exists {
 				err = ele.Click()
 				if err != nil { errCh <- err; return }
+			}
+
+			// 如果是 Web VPN 模式, 则点击 "教务管理系统"
+			if (useWebVpn) {
+				// 监听新页面的创建
+				var newPage playwright.Page
+				page.Context().On("page", func(p playwright.Page) {
+					newPage = p
+				})
+				// 点击 "教务管理系统"
+				page.Evaluate(`() => {
+					const items = document.querySelectorAll('.ml_item_name')
+					for (const item of items) {
+						if (item.textContent?.includes('教务管理系统')) {
+							item.parentElement?.click()
+							break
+						}
+					}
+				}`)
+				// 等待加载
+				page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
+				// 等待新页面创建
+				time.Sleep(1 * time.Second)
+				// 使用新页面
+				if newPage == nil {
+					errCh <- fmt.Errorf("未能成功打开教务管理系统页面")
+					return
+				}
+				page = newPage
+				page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+					State: playwright.LoadStateNetworkidle,
+				})
 			}
 
 			// 点击 "网上选课"
@@ -228,7 +300,7 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 			// 成功
 			errCh <- nil
 
-		}(speed, studentID, password, courseID[i], classID[i])
+		}(speed, studentID, password, courseID[i], classID[i], useWebVpn)
 	}
 
 	// 捕获错误
@@ -262,7 +334,17 @@ func (a *App) watchCoursePubCore(speed int, studentID string, password string, c
 }
 
 // 单线程蹲课模式主函数
-func (a *App) watchCoursePubSyncCore(speed int, studentID string, password string, courseID []string, classID []string, headless bool, wg *sync.WaitGroup, ch chan error) {
+func (a *App) watchCoursePubSyncCore(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool, 
+	useWebVpn bool,
+	wg *sync.WaitGroup, 
+	ch chan error,
+) {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
 
@@ -306,8 +388,13 @@ func (a *App) watchCoursePubSyncCore(speed int, studentID string, password strin
 	})
 
 	// 跳转到登录页面
-	_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
-	if err != nil { ch <- err; return }
+	if useWebVpn {
+		_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
+		if err != nil { ch <- err; return }
+	} else {
+		_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
+		if err != nil { ch <- err; return }
+	}
 
 	// 输入学号
 	ele = page.Locator("#un")
@@ -334,6 +421,40 @@ func (a *App) watchCoursePubSyncCore(speed int, studentID string, password strin
 	if exists, _ := ele.IsVisible(); exists {
 		err = ele.Click()
 		if err != nil { ch <- err; return }
+	}
+
+	// 如果是 Web VPN 模式, 则点击 "教务管理系统"
+	if (useWebVpn) {
+		// 监听新页面的创建
+		var newPage playwright.Page
+		page.Context().On("page", func(p playwright.Page) {
+			newPage = p
+		})
+		// 点击 "教务管理系统"
+		page.Evaluate(`() => {
+			const items = document.querySelectorAll('.ml_item_name')
+			for (const item of items) {
+				if (item.textContent?.includes('教务管理系统')) {
+					item.parentElement?.click()
+					break
+				}
+			}
+		}`)
+		// 等待加载
+		page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+			State: playwright.LoadStateNetworkidle,
+		})
+		// 等待新页面创建
+		time.Sleep(1 * time.Second)
+		// 使用新页面
+		if newPage == nil {
+			ch <- fmt.Errorf("未能成功打开教务管理系统页面")
+			return
+		}
+		page = newPage
+		page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+			State: playwright.LoadStateNetworkidle,
+		})
 	}
 
 	// 点击 "网上选课"
@@ -440,7 +561,19 @@ func (a *App) watchCoursePubSyncCore(speed int, studentID string, password strin
 }
 
 // 专业课蹲课模式主函数
-func (a *App) watchCourseMajCore(speed int, studentID string, password string, courseID string, classID string, headless bool, wg *sync.WaitGroup, ch chan error, sc chan bool, isClose *bool) {
+func (a *App) watchCourseMajCore(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID string, 
+	classID string, 
+	headless bool, 
+	useWebVpn bool,
+	wg *sync.WaitGroup, 
+	ch chan error, 
+	sc chan bool, 
+	isClose *bool,
+) {
 
 	if *isClose {
 		return
@@ -491,8 +624,13 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 	}
 
 	// 跳转到登录页面
-	_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
-	if err != nil { ch <- err; return }
+	if useWebVpn {
+		_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
+		if err != nil { ch <- err; return }
+	} else {
+		_, err = page.Goto("https://cas.bnu.edu.cn/cas/login?service=http%3A%2F%2Fzyfw.bnu.edu.cn%2F")
+		if err != nil { ch <- err; return }
+	}
 
 	// 输入学号
 	ele = page.Locator("#un")
@@ -523,6 +661,40 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 
 	if *isClose {
 		return
+	}
+
+	// 如果是 Web VPN 模式, 则点击 "教务管理系统"
+	if (useWebVpn) {
+		// 监听新页面的创建
+		var newPage playwright.Page
+		page.Context().On("page", func(p playwright.Page) {
+			newPage = p
+		})
+		// 点击 "教务管理系统"
+		page.Evaluate(`() => {
+			const items = document.querySelectorAll('.ml_item_name')
+			for (const item of items) {
+				if (item.textContent?.includes('教务管理系统')) {
+					item.parentElement?.click()
+					break
+				}
+			}
+		}`)
+		// 等待加载
+		page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+			State: playwright.LoadStateNetworkidle,
+		})
+		// 等待新页面创建
+		time.Sleep(1 * time.Second)
+		// 使用新页面
+		if newPage == nil {
+			ch <- fmt.Errorf("未能成功打开教务管理系统页面")
+			return
+		}
+		page = newPage
+		page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+			State: playwright.LoadStateNetworkidle,
+		})
 	}
 
 	// 点击 "网上选课"
@@ -671,21 +843,29 @@ func (a *App) watchCourseMajCore(speed int, studentID string, password string, c
 	sc <- true
 }	
 
-func (a *App) WatchCourseMaj(speed int, studentID string, password string, courseID []string, classID []string, headless bool) error {
+func (a *App) WatchCourseMaj(
+	speed int, 
+	studentID string, 
+	password string, 
+	courseID []string, 
+	classID []string, 
+	headless bool,
+	useWebVpn bool,
+) error {
 
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
 	var mainCh = make(chan error, 1)
 	var isClose = false
 	
-	for i := 0; i < len(courseID); i++ {
-		go func (speed int, studentID string, password string, courseID string, classID string, headless bool, mainCh chan error, isClose *bool) {
+	for i := range courseID {
+		go func (speed int, studentID string, password string, courseID string, classID string, headless bool, useWebVpn bool, mainCh chan error, isClose *bool) {
 			var wg sync.WaitGroup
 			var ch = make(chan error, 1)
 			LOOP:
 			for {
 				var sc = make(chan bool, 1)
 				wg.Add(1)
-				go a.watchCourseMajCore(speed, studentID, password, courseID, classID, headless, &wg, ch, sc, isClose)
+				go a.watchCourseMajCore(speed, studentID, password, courseID, classID, headless, useWebVpn, &wg, ch, sc, isClose)
 				wg.Wait()
 				select {
 					case err := <-ch:
@@ -705,7 +885,7 @@ func (a *App) WatchCourseMaj(speed int, studentID string, password string, cours
 						continue LOOP
 				}
 			}			
-		}(speed, studentID, password, courseID[i], classID[i], headless, mainCh, &isClose)
+		}(speed, studentID, password, courseID[i], classID[i], headless, useWebVpn, mainCh, &isClose)
 	}
 
 	// 捕获错误
@@ -733,7 +913,15 @@ func (a *App) WatchCourseMaj(speed int, studentID string, password string, cours
 	return nil
 }
 
-func (a *App) WatchCourseMajSync(speed int, studentID string, password string, tpcourseID []string, tpclassID []string, headless bool) error {
+func (a *App) WatchCourseMajSync(
+	speed int, 
+	studentID string, 
+	password string, 
+	tpcourseID []string, 
+	tpclassID []string, 
+	headless bool,
+	useWebVpn bool,
+) error {
   
 	runtime.EventsEmit(a.ctx, "currentStatus", "开始蹲课")
   var index int = 0
@@ -745,7 +933,7 @@ func (a *App) WatchCourseMajSync(speed int, studentID string, password string, t
 		var ch = make(chan error, 1)
 		var sc = make(chan bool, 1)
 		wg.Add(1)
-		go a.watchCourseMajCore(speed, studentID, password, tpcourseID[index], tpclassID[index], headless, &wg, ch, sc, &isClose)
+		go a.watchCourseMajCore(speed, studentID, password, tpcourseID[index], tpclassID[index], headless, useWebVpn, &wg, ch, sc, &isClose)
 		wg.Wait()
 		select {
 			case err := <-ch:
