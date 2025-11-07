@@ -66,6 +66,8 @@ func (a *App) CatchCoursePub(
 				dialog.Accept()
 			})
 
+			page.SetDefaultNavigationTimeout(60_000)
+
 			// 跳转到登录页面
 			if useWebVpn {
 				_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
@@ -76,17 +78,17 @@ func (a *App) CatchCoursePub(
 			}
 
 			// 输入学号
-			ele = page.Locator("#un")
+			ele = page.Locator("#loginForm > div > div.username > input")
 			err = ele.Fill(studentID)
 			if err != nil { errCh <- err; return }
 
 			// 输入密码
-			ele = page.Locator("#pd")
+			ele = page.Locator("#password-input")
 			err = ele.Fill(password)
 			if err != nil { errCh <- err; return }
 
 			// 点击登录按钮
-			ele = page.Locator("#index_login_btn")
+			ele = page.Locator("#loginForm > div.login-btn-row > a")
 			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
@@ -111,7 +113,7 @@ func (a *App) CatchCoursePub(
 				})
 				// 点击 "教务管理系统"
 				page.Evaluate(`() => {
-					const items = document.querySelectorAll('.ml_item_name')
+					const items = document.querySelectorAll('#common_div > ul > li > div.text-box')
 					for (const item of items) {
 						if (item.textContent?.includes('教务管理系统')) {
 							item.parentElement?.click()
@@ -315,6 +317,8 @@ func (a *App) CatchCourseMaj(
 				dialog.Accept()
 			})
 
+			page.SetDefaultNavigationTimeout(60_000)
+
 			// 跳转到登录页面
 			if useWebVpn {
 				_, err = page.Goto("https://one.bnu.edu.cn/dcp/forward.action?path=/portal/portal&p=home")
@@ -325,17 +329,17 @@ func (a *App) CatchCourseMaj(
 			}
 
 			// 输入学号
-			ele = page.Locator("#un")
+			ele = page.Locator("#loginForm > div > div.username > input")
 			err = ele.Fill(studentID)
 			if err != nil { errCh <- err; return }
 
 			// 输入密码
-			ele = page.Locator("#pd")
+			ele = page.Locator("#password-input")
 			err = ele.Fill(password)
 			if err != nil { errCh <- err; return }
 
 			// 点击登录按钮
-			ele = page.Locator("#index_login_btn")
+			ele = page.Locator("#loginForm > div.login-btn-row > a")
 			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
@@ -360,7 +364,7 @@ func (a *App) CatchCourseMaj(
 				})
 				// 点击 "教务管理系统"
 				page.Evaluate(`() => {
-					const items = document.querySelectorAll('.ml_item_name')
+					const items = document.querySelectorAll('#common_div > ul > li > div.text-box')
 					for (const item of items) {
 						if (item.textContent?.includes('教务管理系统')) {
 							item.parentElement?.click()

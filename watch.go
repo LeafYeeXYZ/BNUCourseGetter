@@ -150,17 +150,17 @@ func (a *App) watchCoursePubCore(
 			}
 
 			// 输入学号
-			ele = page.Locator("#un")
+			ele = page.Locator("#loginForm > div > div.username > input")
 		  err = ele.Fill(studentID)
 			if err != nil { errCh <- err; return }
 
 			// 输入密码
-			ele = page.Locator("#pd")
+			ele = page.Locator("#password-input")
 			err = ele.Fill(password)
 			if err != nil { errCh <- err; return }
 
 			// 点击登录按钮
-			ele = page.Locator("#index_login_btn")
+			ele = page.Locator("#loginForm > div.login-btn-row > a")
 			err = ele.Click()
 			if err != nil { errCh <- err; return }
 
@@ -185,7 +185,7 @@ func (a *App) watchCoursePubCore(
 				})
 				// 点击 "教务管理系统"
 				page.Evaluate(`() => {
-					const items = document.querySelectorAll('.ml_item_name')
+					const items = document.querySelectorAll('#common_div > ul > li > div.text-box')
 					for (const item of items) {
 						if (item.textContent?.includes('教务管理系统')) {
 							item.parentElement?.click()
@@ -397,17 +397,17 @@ func (a *App) watchCoursePubSyncCore(
 	}
 
 	// 输入学号
-	ele = page.Locator("#un")
+	ele = page.Locator("#loginForm > div > div.username > input")
 	err = ele.Fill(studentID)
 	if err != nil { ch <- err; return }
 
 	// 输入密码
-	ele = page.Locator("#pd")
+	ele = page.Locator("#password-input")
 	err = ele.Fill(password)
 	if err != nil { ch <- err; return }
 
 	// 点击登录按钮
-	ele = page.Locator("#index_login_btn")
+	ele = page.Locator("#loginForm > div.login-btn-row > a")
 	err = ele.Click()
 	if err != nil { ch <- err; return }
 
@@ -432,7 +432,7 @@ func (a *App) watchCoursePubSyncCore(
 		})
 		// 点击 "教务管理系统"
 		page.Evaluate(`() => {
-			const items = document.querySelectorAll('.ml_item_name')
+			const items = document.querySelectorAll('#common_div > ul > li > div.text-box')
 			for (const item of items) {
 				if (item.textContent?.includes('教务管理系统')) {
 					item.parentElement?.click()
@@ -633,17 +633,17 @@ func (a *App) watchCourseMajCore(
 	}
 
 	// 输入学号
-	ele = page.Locator("#un")
+	ele = page.Locator("#loginForm > div > div.username > input")
 	err = ele.Fill(studentID)
 	if err != nil { ch <- err; return }
 
 	// 输入密码
-	ele = page.Locator("#pd")
+	ele = page.Locator("#password-input")
 	err = ele.Fill(password)
 	if err != nil { ch <- err; return }
 
 	// 点击登录按钮
-	ele = page.Locator("#index_login_btn")
+	ele = page.Locator("#loginForm > div.login-btn-row > a")
 	err = ele.Click()
 	if err != nil { ch <- err; return }
 
@@ -672,7 +672,7 @@ func (a *App) watchCourseMajCore(
 		})
 		// 点击 "教务管理系统"
 		page.Evaluate(`() => {
-			const items = document.querySelectorAll('.ml_item_name')
+			const items = document.querySelectorAll('#common_div > ul > li > div.text-box')
 			for (const item of items) {
 				if (item.textContent?.includes('教务管理系统')) {
 					item.parentElement?.click()
